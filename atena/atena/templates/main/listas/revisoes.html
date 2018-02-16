@@ -1,0 +1,33 @@
+{% extends 'base/lista.html' %}
+
+{% block extra_table_head %}
+<div class="box-tools">
+  <div class="input-group input-group-sm mr-10" style="width: 150px;">
+    <div class="input-group-btn">
+      <a class="btn btn-default pull-right" href="{% url 'main:CadastroRevisao' %}">Adicionar Nova</a>
+    </div>
+  </div>
+</div>
+{% endblock extra_table_head%}
+
+{% block tabela %}
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Descrição</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for  obj in lista %}
+      <tr>
+        <td> <a href="{% url 'main:ListaDocumentosRevisao' obj.id %}"> {{ obj.nome }} </a></td>
+        <td> {{ obj.descricao}} </td>
+        <td class="td-editar"><a href="{% url 'main:EdicaoRevisao' obj.id %}">Editar</a></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock tabela %}
+

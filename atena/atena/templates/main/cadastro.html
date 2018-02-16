@@ -1,0 +1,17 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12 col-sm-12">
+    <div class="box box-primary">
+      <div class="box-header with-border">
+        <h3 class="box-title">{{ subtitulo_pagina }}</h3>
+      </div>
+      <div class="box-body">
+        {% crispy form %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
