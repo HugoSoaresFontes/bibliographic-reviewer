@@ -24,6 +24,9 @@ class CadastroRevisaoView(GroupRequiredMixin, BaseFormView):
     model = Revisao
     form_class = RevisaoForm
 
+    def form_invalid(self, form):
+        print(form.errors)
+
 
 class EdicaoRevisaoView(CadastroRevisaoView, BaseUpdateView):
     pass
@@ -53,7 +56,11 @@ class ImportarDocumentosView(ListaDocumentosRevisaoView):
 
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
-        importar_arquivos(get_object_or_404(Revisao, id=self.kwargs['pk']), "IEEE Xplore")
+        importar_arquivos(
+            revisao=get_object_or_404(Revisao, id=self.kwargs['pk']), 
+            base="IEEE Xplore",
+            cadastrante=self.request.user
+        )
         context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
-        self.queryset = Documento.objects.filter(revisao=kwargs.get('pk'))
+        self.queryset = Documento.objects.filter()
         return context

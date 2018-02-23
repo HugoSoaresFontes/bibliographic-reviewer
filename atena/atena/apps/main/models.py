@@ -19,45 +19,43 @@ from base.models import BaseModel
 #                                 data_publicacao=data_publicacao, autores_ordem=autores_ordem,
 #                                 autores=autores, citado_papers=citado_papers, citado_patentes=citado_patentes,
 #                                 data_conferencia=)
+class Base(models.Model): 
+    nome = models.CharField("Nome", max_length=255)
+
+    class Meta:
+        db_table = 'main_bases'
+        verbose_name = 'Base'
+        verbose_name_plural = 'Base'
+
+    def __unicode__(self):
+        return self.nome
+
+    def __str__(self):
+        return self.nome
+
 
 class Documento(BaseModel):
     """ Documentos das revisões  """
+    bases = models.ManyToManyField(Base)
+
+    titulo = models.CharField("Titulo", max_length=300, unique=True)
     resumo = models.TextField("Resumo")
     resumo_url = models.TextField("URL Resumo", null=True, blank=True)
-    autores_ordem = models.TextField("Número de cada autor", null=True, blank=True)
     autores = models.TextField("Autores", null=True, blank=True)
     citado_papers = models.IntegerField("Número de papers que citaram o artigo",
                                         null=True, blank=True)
     citado_patentes = models.IntegerField("Número de patentes que citaram o artigo",
                                          null=True, blank=True)
-    data_conferencia = models.CharField("Datas da conferência", max_length=255,
-                                        null=True, blank=True)
-    lugar_conferencia = models.CharField("Lugar da conferência", max_length=255,
-                                         null=True, blank=True)
-    doi = models.CharField("DOi", max_length=255, null=True, blank=True)
-    nome_completo = models.CharField("Nome completo de um autor", max_length=255,
+    doi = models.CharField("DOi", max_length=255, null=True, blank=True, unique=True)
+    nome_completo_autor = models.CharField("Nome completo de um autor", max_length=255,
                                      null=True, blank=True)
     html_url = models.CharField("Nome completo de um autor", max_length=255,
                                 null=True, blank=True)
     palavras_chaves = models.TextField("Termos do autor e da revista", null=True, blank=True)
-    chaves_autores = models.TextField("Palavras chaves fornecidas pelo autor que descrevem o documento",
-                                      null=True, blank=True)
-    chaves_revista = models.TextField("Termos da revista", null=True, blank=True)
-    is_numero = models.CharField("Identificador interno na revista", max_length=255,
-                                 null=True, blank=True)
-    isbn = models.CharField("International Standard Book Numbe", max_length=255,
-                            null=True, blank=True)
-    issn = models.CharField("International Standard Serial Number", max_length=8,
-                            null=True, blank=True)
-    issue = models.CharField("Número da edição da revista em que o artigo foi publicado",
-                             max_length=30, null=True, blank=True)
+
     pdf_url	= models.CharField("URL do pdf", max_length=255, null=True, blank=True)
-    data_publicacao = models.DateField("Data da pubicação", null=True, blank=True)
-    numero_publicacao = models.IntegerField("Número da publicação", null=True, blank=True)
-    titulo_publicacao = models.CharField("Titulo da publicação", max_length=255, null=True, blank=True)
-    editora = models.CharField("Editora", max_length=255, null=True, blank=True)
+    data = models.DateField("Data da pubicação", null=True, blank=True)
     rank = models.IntegerField("Rank do artigo na pesquisa", null=True, blank=True)
-    titulo = models.CharField("Titulo", max_length=255, null=True, blank=True, unique=True)
 
     arquivo = models.FileField(
         upload_to='arquivos', verbose_name='Arquivo do documento')
@@ -82,7 +80,7 @@ class Revisao(BaseModel):
     descricao = models.TextField("Descricao")
     usuarios = models.ManyToManyField(Usuario, related_name="revisoes")
     adm = models.ForeignKey(Usuario, related_name='adm_revisoes', on_delete=models.CASCADE)
-    documentos = models.ManyToManyField(Documento)
+    documentos = models.ManyToManyField(Documento, null=True, blank=True)
 
     class Meta:
         db_table = 'main_revisoes'
@@ -94,6 +92,7 @@ class Revisao(BaseModel):
 
     def __str__(self):
         return self.nome
+
 
 class Fichamento(BaseModel):
     documento = models.ForeignKey(Documento, on_delete=models.CASCADE, related_name="fichamentos")

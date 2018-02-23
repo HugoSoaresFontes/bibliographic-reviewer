@@ -15,16 +15,16 @@
   <thead>
     <tr>
       <th>Titulo</th>
-      <th>Rank</th>
       <th>Base</th>
+      <th>Rank</th>
     </tr>
   </thead>
   <tbody>
     {% for  obj in lista %}
       <tr>
-        <td> <a href=""> {{ obj.rank }} </a></td>
-        <td> {{ obj.titulo}} </td>
-        <td class="td-editar"><a href="">{{ obj.base }}</a></td>
+        <td> <a href=""> {{ obj.titulo }} </a></td>
+        <td> {% if obj.revisao.id %}  {% endif %} </td>
+        <td class="td-editar"><a href="">{{ obj.rank }}</a></td>
       </tr>
     {% endfor %}
   </tbody>
