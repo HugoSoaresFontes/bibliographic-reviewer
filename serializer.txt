@@ -1,25 +1,30 @@
 /+ resumo
-+ resumo_url
+/+ resumo_url
 ? autores_ordem
-+ autores
+/+ autores
 - citado_papers
 - citado_patentes
 - data_conferencia
 - lugar_conferencia
-+ doi
+/+ doi
 - nome_completo
 - html_url
-+ palavras_chaves
+/+ palavras_chaves
 - chaves_autores
 - chaves_revista
 - is_numero
-+ isbn
-+ issue
+* isbn
+* issue
 - pdf_url
-+ data_publicacao
-+ numero_publicacao
-+ titulo_publicacao
-+ editora
+/+ data_publicacao
+* numero_publicacao
+/+ titulo_publicacao
+? editora
 - rank
-+ titulo
+/+ titulo
 
++ --> vou botar
+- --> não vou botar
++/ --> ja botei
+* --> talvez seja possivel botar mas pulei
+? --> tenho que tirar duvida
