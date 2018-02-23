@@ -14,6 +14,22 @@
 .mb-10{
     margin-bottom: 10px;
 }
+.m-20{
+    margin: 20px;
+}
+.mr-20{
+    margin-right: 20px !important;
+}
+.ml-20{
+    margin-left: 20px;
+}
+.mt-20{
+    margin-top: 20px;
+}
+.mb-20{
+    margin-bottom: 20px;
+}
+
 .m-30{
     margin: 30px;
 }
@@ -49,6 +65,10 @@
 }
 .td-editar a {
     color: #0e90d2;
+}
+
+.box-search{
+    margin: 10px;
 }
 /* Fim páginas de listagem/gerencia */
 

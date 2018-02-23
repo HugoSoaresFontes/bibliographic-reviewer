@@ -534,7 +534,8 @@ $(document).ready(function () {
                         return {
                             q: params.term, // search term
                             page: params.page,
-                            profissionais_base__profissionalequipesaude__unidade_saude__id__in: $('#id_unidade').prop('multiple') ? $('#id_unidade').val() : [$('#id_unidade').val()]
+                            // TODO: Descomentar a linha abaixo
+                            // profissionais_base__profissionalequipesaude__unidade_saude__id__in: $('#id_unidade').prop('multiple') ? $('#id_unidade').val() : [$('#id_unidade').val()]
                         };
                     },
                     processResults: function (data, params) {
