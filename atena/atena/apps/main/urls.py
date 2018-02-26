@@ -11,6 +11,6 @@ urlpatterns = [
     url(r'^revisao/(?P<pk>\d+)/$', EdicaoRevisaoView.as_view(), name='EdicaoRevisao'),
     url(r'^revisao/(?P<pk>\d+)/artigos$', ListaDocumentosRevisaoView.as_view(), name='ListaDocumentosRevisao'),
 
-    url(r'^revisao/documentos/importar/(?P<pk>\d+)/$', ImportarDocumentosView.as_view(), name='ImportarDocumentos'),
+    url(r'^revisao/(?P<pk>\d+)/documentos/importar/$', ImportarDocumentosView.as_view(), name='ImportarDocumentos'),
 
 ]

@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import get_object_or_404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render, reverse
+from django.http import HttpResponseRedirect
 
 from base.views import BaseFormView, BaseTemplateView, BaseUpdateView, BaseListView
-from .models import Revisao, Documento, Fichamento
-from .forms import RevisaoForm
 from base.mixins import LoginRequiredMixin, GroupRequiredMixin
+from .models import Revisao, Documento, Fichamento
 from .importar_arquivos import importar_arquivos
+from .forms import RevisaoForm
+
 class IndexView(LoginRequiredMixin, BaseTemplateView):
     template = 'main/index.html'
     titulo_pagina = "Início"
@@ -17,15 +18,13 @@ class IndexView(LoginRequiredMixin, BaseTemplateView):
 
 class SucessoView(BaseTemplateView):
     template_name = 'sucesso.html'
+         
 
 
 class CadastroRevisaoView(GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Revisão"
     model = Revisao
     form_class = RevisaoForm
-
-    def form_invalid(self, form):
-        print(form.errors)
 
 
 class EdicaoRevisaoView(CadastroRevisaoView, BaseUpdateView):
@@ -48,19 +47,18 @@ class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
         context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
-        self.queryset = Documento.objects.filter(revisao=kwargs.get('pk'))
+        self.queryset = Documento.objects.filter(revisoes=kwargs.get('pk'))
         return context
 
 
 class ImportarDocumentosView(ListaDocumentosRevisaoView):
 
-    def get_context_data(self, **kwargs):
-        context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
+    def get(self,  request, *args, **kwargs):
         importar_arquivos(
-            revisao=get_object_or_404(Revisao, id=self.kwargs['pk']), 
+            revisao=get_object_or_404(Revisao, id=kwargs['pk']), 
             base="IEEE Xplore",
             cadastrante=self.request.user
         )
-        context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
-        self.queryset = Documento.objects.filter()
-        return context
+        
+        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk':kwargs['pk']}))
+        
