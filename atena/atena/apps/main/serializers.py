@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from bs4 import BeautifulSoup as bsoup
+from datetime import datetime
 
 from contas.models import Usuario
 from .models import Documento
@@ -27,3 +29,11 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
 		)
 		# Falta add o documento a revisão
 		return doc
+
+
+class PubMedSerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model = Documento
+		fields = ['resumo', 'resumo_url', 'autores', 'doi', 'palavras_chaves',
+				  'data', 'titulo']
