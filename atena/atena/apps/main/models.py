@@ -7,18 +7,7 @@ from contas.models import Usuario
 from base.models import BaseModel
 
 
-# class DocumentoManager(models.Manager):
-#     def salvar_documento(self, titulo, resumo, resumo_url, data_publicacao=None, autores_ordem,
-#                          autores=None, citado_papers=None, chaves_autores=None,
-#                          citado_patentes=None, data_conferencia=None, lugar_conferencia=None,
-#                          doi=None, nome_completo=None, html_url=None, palavras_chaves=None,
-#                          chaves_revistas=None, is_numero=None, isbn=None, issn=None,
-#                          issue=None, pdf_url=None, numero_publicacao, titulo_publicacao,
-#                          editora=None, rank=None, arquivo=None):
-#         documento = self.create(titulo=titulo, resumo=resumo, resumo_url=resumo_url,
-#                                 data_publicacao=data_publicacao, autores_ordem=autores_ordem,
-#                                 autores=autores, citado_papers=citado_papers, citado_patentes=citado_patentes,
-#                                 data_conferencia=)
+#data_conferencia=)
 class Base(models.Model): 
     nome = models.CharField("Nome", max_length=255)
 
@@ -80,7 +69,7 @@ class Revisao(BaseModel):
     descricao = models.TextField("Descricao")
     usuarios = models.ManyToManyField(Usuario, related_name="revisoes")
     adm = models.ForeignKey(Usuario, related_name='adm_revisoes', on_delete=models.CASCADE)
-    documentos = models.ManyToManyField(Documento, null=True, blank=True)
+    documentos = models.ManyToManyField(Documento, related_name='revisoes')
 
     class Meta:
         db_table = 'main_revisoes'

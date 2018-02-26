@@ -15,13 +15,13 @@ health_queryterms = [
 
 queryterms = [technology_queryterms, health_queryterms]
 
+
 def importar_arquivos(revisao, base, cadastrante):
     if base == "IEEE Xplore":
         ieee_searcher = IEEE_Xplore_Searcher()
-        print(cadastrante)
         documentos = ieee_searcher.search(queryterms=queryterms,
                                         start_year=1975, content_type="Journals")
-        for doc in documentos[:10]: 
+        for doc in documentos: 
         	doc.update({
         		'revisao': revisao, 
         		'cadastrado_por': cadastrante
