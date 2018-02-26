@@ -8,7 +8,8 @@ from base.views import BaseFormView, BaseTemplateView, BaseUpdateView, BaseListV
 from base.mixins import LoginRequiredMixin, GroupRequiredMixin
 from .models import Revisao, Documento, Fichamento
 from .importar_arquivos import importar_arquivos
-from .forms import RevisaoForm
+from .forms import RevisaoForm, FichamentoForm
+
 
 class IndexView(LoginRequiredMixin, BaseTemplateView):
     template = 'main/index.html'
@@ -20,11 +21,13 @@ class SucessoView(BaseTemplateView):
     template_name = 'sucesso.html'
          
 
-
 class CadastroRevisaoView(GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Revisão"
     model = Revisao
     form_class = RevisaoForm
+
+    def form_invalid(self, form):
+        print(form.errors)
 
 
 class EdicaoRevisaoView(CadastroRevisaoView, BaseUpdateView):
@@ -62,3 +65,22 @@ class ImportarDocumentosView(ListaDocumentosRevisaoView):
         
         return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk':kwargs['pk']}))
         
+
+class CadastroFichamentoView(GroupRequiredMixin, BaseFormView):
+    titulo_pagina = "Fichamento"
+    model = Fichamento
+    form_class = FichamentoForm
+
+    def get_context_data(self, **kwargs):
+        return super(CadastroFichamentoView, self).get_context_data(**kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super(CadastroFichamentoView, self).get_form_kwargs()
+        kwargs['revisao'] = get_object_or_404(Revisao, id=self.kwargs['revisao_pk'])
+        kwargs['documento'] = get_object_or_404(Documento, id=self.kwargs['documento_pk'])
+
+        return kwargs
+
+
+class EdicaoFichamentoView(CadastroFichamentoView, BaseUpdateView):
+    pass

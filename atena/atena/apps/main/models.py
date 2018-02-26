@@ -31,13 +31,13 @@ class Documento(BaseModel):
     resumo = models.TextField("Resumo")
     resumo_url = models.TextField("URL Resumo", null=True, blank=True)
     autores = models.TextField("Autores", null=True, blank=True)
+    revista = models.CharField("Revista", max_length=255, null=True, blank=True)
     citado_papers = models.IntegerField("Número de papers que citaram o artigo",
                                         null=True, blank=True)
     citado_patentes = models.IntegerField("Número de patentes que citaram o artigo",
                                          null=True, blank=True)
     doi = models.CharField("DOi", max_length=255, null=True, blank=True, unique=True)
-    nome_completo_autor = models.CharField("Nome completo de um autor", max_length=255,
-                                     null=True, blank=True)
+
     html_url = models.CharField("Nome completo de um autor", max_length=255,
                                 null=True, blank=True)
     palavras_chaves = models.TextField("Termos do autor e da revista", null=True, blank=True)
@@ -53,6 +53,16 @@ class Documento(BaseModel):
         db_table = 'main_documentos'
         verbose_name = 'Documento'
         verbose_name_plural = 'Documentos'
+
+    @property
+    def lista_fichamentos_revisoes(self):
+        return list(Fichamento.objects.filter(documento=self.id).values_list('revisao__id', flat=True))
+
+    @property
+    def dicionario_fichamentos_revisoes(self):
+        fichamentos = Fichamento.objects.filter(documento=self.id).values_list('revisao__id', 'id')
+        if fichamentos: 
+            return dict(fichamentos)
 
     def __unicode__(self):
         return self.titulo
@@ -95,8 +105,9 @@ class Fichamento(BaseModel):
         verbose_name = 'fichamentos'
         verbose_name_plural = 'fichamentos'
 
+
     def __unicode__(self):
-        return self.documento.titulo + " / " + self.revisao.titulo.nome
+        return self.documento.titulo
 
     def __str__(self):
-        return self.documento.titulo + " / " + self.revisao.titulo.nome
+        return self.documento.titulo 

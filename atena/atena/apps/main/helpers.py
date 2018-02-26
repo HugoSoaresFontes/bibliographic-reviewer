@@ -29,3 +29,30 @@ class RevisaoHelper(FormHelper):
                 css_class="row"
             )
         )
+
+
+class FichamentoHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(FichamentoHelper, self).__init__(*args, **kwargs)
+
+        self.layout = Layout(
+            Div(
+                Field('caracteristicas_dados', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('citacoes',  css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('anotacoes', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Div(
+                    Submit('submit', 'Salvar', css_class="btn pull-right"),
+                    css_class='form-group col-md-12'
+                ),
+                css_class="row"
+            )
+        )
