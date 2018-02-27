@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from .classes_importacao import IEEE_Xplore_Searcher
-from .serializers import DocumentoSerializerIEEE
+from .classes_importacao import IEEE_Xplore_Searcher, PubMed_Searcher
+from .serializers import DocumentoSerializerIEEE, PubMedSerializer
 from .models import Documento
 
 technology_queryterms = [
@@ -28,3 +28,16 @@ def importar_arquivos(revisao, base, cadastrante):
         		})
         	serializer = DocumentoSerializerIEEE(data=doc)
         	serializer.save(doc)
+
+    if base == "PubMed":
+        documentos = PubMed_Searcher().search(queryterms=queryterms, max_records=5)
+        for doc in documentos:
+            doc.update({
+        		'revisao': revisao,
+                'cadastrado_por': cadastrante
+                })
+            serializer = PubMedSerializer(data=doc)
+            if serializer.is_valid():
+        	    serializer.save()
+            else:
+                print(doc['titulo'])
