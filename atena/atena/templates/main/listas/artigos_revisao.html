@@ -1,4 +1,5 @@
 {% extends 'base/lista.html' %}
+{% load poll_extras %}
 
 {% block extra_table_head %}
 <div class="box-tools">
@@ -16,6 +17,7 @@
     <tr>
       <th>Titulo</th>
       <th>Base</th>
+      <th>Fichamento</th>
       <th>Rank</th>
     </tr>
   </thead>
@@ -23,7 +25,14 @@
     {% for  obj in lista %}
       <tr>
         <td> <a href=""> {{ obj.titulo }} </a></td>
-        <td> {% if obj.revisao.id %}  {% endif %} </td>
+        <td> {% if obj.id == 51 %} {{ obj.dicionario_fichamentos_revisoes }} {% endif %}</td>
+        <td> 
+          {% if revisao.id in obj.lista_fichamentos_revisoes %}
+            <a href="{% url 'main:EdicaoFichamento' revisao.id obj.id  obj.dicionario_fichamentos_revisoes|get_item:revisao.id %}"> abrir </a> 
+          {% else %} 
+            <a href="{% url 'main:CadastroFichamento' revisao.id obj.id  %}"> Começar fichamento </a> 
+          {% endif %} 
+        </td>
         <td class="td-editar"><a href="">{{ obj.rank }}</a></td>
       </tr>
     {% endfor %}
