@@ -33,9 +33,9 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
 			doc.revisoes.add(data['revisao'])
 			return doc
 
-class PubMedSerializer(serializers.ModelSerializer):
+class NCBISerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Documento
-		fields = ['resumo', 'resumo_url', 'autores', 'doi', 'palavras_chaves',
+		fields = ['resumo', 'html_url', 'autores', 'doi', 'palavras_chaves',
 				  'data', 'titulo']

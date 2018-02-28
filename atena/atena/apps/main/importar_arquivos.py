@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from .classes_importacao import IEEE_Xplore_Searcher, PubMed_Searcher
-from .serializers import DocumentoSerializerIEEE, PubMedSerializer
+from .classes_importacao import IEEE_Xplore_Searcher, PubMed_Searcher, PMC_Searcher
+from .serializers import DocumentoSerializerIEEE, NCBISerializer
 from .models import Documento
 
 technology_queryterms = [
@@ -22,12 +22,12 @@ def importar_arquivos(revisao, base, cadastrante):
         documentos = ieee_searcher.search(queryterms=queryterms,
                                         start_year=1975, content_type="Journals")
         for doc in documentos: 
-        	doc.update({
+            doc.update({
         		'revisao': revisao, 
         		'cadastrado_por': cadastrante
         		})
-        	serializer = DocumentoSerializerIEEE(data=doc)
-        	serializer.save(doc)
+            serializer = DocumentoSerializerIEEE(data=doc)
+            serializer.save(doc)
 
     if base == "PubMed":
         documentos = PubMed_Searcher().search(queryterms=queryterms, max_records=5)
@@ -36,8 +36,21 @@ def importar_arquivos(revisao, base, cadastrante):
         		'revisao': revisao,
                 'cadastrado_por': cadastrante
                 })
-            serializer = PubMedSerializer(data=doc)
+            serializer = NCBISerializer(data=doc)
             if serializer.is_valid():
-        	    serializer.save()
+                serializer.save()
+            else:
+                print(doc['titulo'])
+
+    if base == "PMC":
+        documentos = PMC_Searcher().search(queryterms=queryterms, max_records=5)
+        for doc in documentos:
+            doc.update({
+        		'revisao': revisao,
+                'cadastrado_por': cadastrante
+                })
+            serializer = NCBISerializer(data=doc)
+            if serializer.is_valid():
+                serializer.save()
             else:
                 print(doc['titulo'])

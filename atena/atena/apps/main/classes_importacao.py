@@ -5,8 +5,6 @@ import requests
 from datetime import datetime
 from bs4 import BeautifulSoup as bsoup
 
-from .serializers import PubMedSerializer
-
 class IEEE_Xplore_Searcher():
     apikey = '8m22c725rj99bvxq6pftexqk'
     address = 'http://ieeexploreapi.ieee.org/api/v1/search/articles?'
@@ -261,6 +259,39 @@ class PMC_Searcher(NCBI_Searcher):
     def _article_url(self):
         return 'https://www.ncbi.nlm.nih.gov/pmc/articles/'
 
+    def _get_article_metadata(self, *args):
+        id_list = ','.join([str(x) for x in args])
+
+        payload = {"id": id_list, "db": self._db, "retmode": "xml"}
+        url = "%s?%s" % (self.fetch_url, urlencode(payload))
+        print(url)
+
+        soup = bsoup(requests.get(url).content, "xml")
+
+        pmc_articles = soup.findAll('article')
+
+        documentos = []
+        append = documentos.append
+        for p_art in pmc_articles:
+            author_list = p_art.findAll("contrib", {"contrib-type": "author"})
+            authors = ["%s %s" % (getattr(a, "given-names").text, a.surname.text) for a in author_list]
+            keywords = [k.text for k in p_art.findAll("kwd")]
+            pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
+            data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
+            pmc_id = soup.findAll("article-id", {"pub-id-type": 'pmc'})[0].text
+
+            documento = {}
+            documento['resumo'] = getattr(p_art.abstract, 'text', '')
+            documento['html_url'] = "%s%s" % (self._article_urlrece, pmc_id)
+            documento['autores'] = ",".join(authors)
+            documento['doi'] = p_art.findAll("article-id", {"pub-id-type": "doi"})[0].text
+            documento['palavras_chaves'] = ",".join(keywords)
+            documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
+            documento['titulo'] = getattr(p_art, "article-title").text
+            append(documento)
+
+        return documentos
+
 
 class PubMed_Searcher(NCBI_Searcher):
     """Realiza pesquisas na base PubMed."""
@@ -300,7 +331,7 @@ class PubMed_Searcher(NCBI_Searcher):
 
             documento = {}
             documento['resumo'] = getattr(p_art.AbstractText, 'text', '')
-            documento['resumo_url'] = "%s%s" % (self._article_url, p_art.PMID.text)
+            documento['html_url'] = "%s%s" % (self._article_url, p_art.PMID.text)
             documento['autores'] = ",".join(authors)
             documento['doi'] = p_art.findAll("ArticleId", {"IdType": "doi"})[0].text
             documento['palavras_chaves'] = ",".join(keywords)
