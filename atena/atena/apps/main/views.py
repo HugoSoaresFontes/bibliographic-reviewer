@@ -59,7 +59,7 @@ class ImportarDocumentosView(ListaDocumentosRevisaoView):
     def get(self,  request, *args, **kwargs):
         importar_arquivos(
             revisao=get_object_or_404(Revisao, id=kwargs['pk']), 
-            base="IEEE Xplore",
+            base="Science Direct",
             cadastrante=self.request.user
         )
         
