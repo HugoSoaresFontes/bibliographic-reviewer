@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5638e5dd-fa28-42bf-bfdc-2cb55661589c" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/atena/atena/static/gentelella/vendors/pdfmake/pdfmake.js" afterPath="$PROJECT_DIR$/atena/atena/static/gentelella/vendors/pdfmake/pdfmake.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -23,11 +24,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/atena/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="176">
-              <caret line="167" column="5" lean-forward="false" selection-start-line="167" selection-start-column="1" selection-end-line="167" selection-end-column="5" />
+            <state relative-caret-position="-410">
+              <caret line="158" column="6" lean-forward="false" selection-start-line="158" selection-start-column="2" selection-end-line="158" selection-end-column="6" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="255">
+              <caret line="18" column="0" lean-forward="false" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -47,6 +58,7 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/atena/.gitignore" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -213,27 +225,6 @@
               <item name="bibliographic-reviewer" type="462c0819:PsiDirectoryNode" />
               <item name="atena" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="bibliographic-reviewer" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bibliographic-reviewer" type="462c0819:PsiDirectoryNode" />
-              <item name="atena" type="462c0819:PsiDirectoryNode" />
-              <item name="atena" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bibliographic-reviewer" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bibliographic-reviewer" type="462c0819:PsiDirectoryNode" />
-              <item name="atena" type="462c0819:PsiDirectoryNode" />
-              <item name="atena" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bibliographic-reviewer" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bibliographic-reviewer" type="462c0819:PsiDirectoryNode" />
-              <item name="atena" type="462c0819:PsiDirectoryNode" />
-              <item name="atena" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-              <item name="admin-lte" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -318,8 +309,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/atena/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="167" column="5" lean-forward="false" selection-start-line="167" selection-start-column="1" selection-end-line="167" selection-end-column="5" />
+        <state relative-caret-position="-410">
+          <caret line="158" column="6" lean-forward="false" selection-start-line="158" selection-start-column="2" selection-end-line="158" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="18" column="0" lean-forward="false" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
           <folding />
         </state>
       </provider>
