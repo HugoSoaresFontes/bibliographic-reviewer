@@ -43,8 +43,10 @@ class Documento(BaseModel):
     palavras_chaves = models.TextField("Termos do autor e da revista", null=True, blank=True)
 
     pdf_url	= models.CharField("URL do pdf", max_length=255, null=True, blank=True)
-    data = models.DateField("Data da pubicação", null=True, blank=True)
+    data = models.DateField("Data da publicação", null=True, blank=True)
     rank = models.IntegerField("Rank do artigo na pesquisa", null=True, blank=True)
+    citado_papers_scholar = models.IntegerField("Número de citações pelo Google Scholar", null=True, blank=True)
+    citado_papers_scholar_data = models.DateTimeField("Rank do artigo na pesquisa", null=True, blank=True)
 
     arquivo = models.FileField(
         upload_to='arquivos', verbose_name='Arquivo do documento')

@@ -9,7 +9,8 @@ from base.mixins import LoginRequiredMixin, GroupRequiredMixin
 from .models import Revisao, Documento, Fichamento
 from .importar_arquivos import importar_arquivos
 from .forms import RevisaoForm, FichamentoForm
-
+import scholarly
+from datetime import datetime
 
 class IndexView(LoginRequiredMixin, BaseTemplateView):
     template = 'main/index.html'
@@ -52,6 +53,20 @@ class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
         context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
         self.queryset = Documento.objects.filter(revisoes=kwargs.get('pk'))
         return context
+
+
+class ClassificarDocumentosView(ListaDocumentosRevisaoView):
+
+    def get(self, request, *args, **kwargs):
+        docs = Documento.objects.filter(revisoes=kwargs.get('pk'), citado_papers_scholar=None)
+        for doc in docs[:2]:
+            item = next(scholarly.search_pubs_query(doc.doi))
+            if item:
+                doc.citado_papers_scholar = item.citedby
+                doc.citado_papers_scholar_data = datetime.utcnow()
+                doc.save()
+
+        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
 
 
 class ImportarDocumentosView(ListaDocumentosRevisaoView):

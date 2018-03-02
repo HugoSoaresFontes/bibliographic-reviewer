@@ -7,6 +7,9 @@
     <div class="input-group-btn">
       <a class="btn btn-default pull-right" href="{% url 'main:ImportarDocumentos' revisao.id %}">Importar Artigos</a>
     </div>
+    <div class="input-group-btn">
+      <a class="btn btn-default pull-right" href="{% url 'main:ClassificarDocumentos' revisao.id %}">Classificar artigos via Scholar</a>
+    </div>
   </div>
 </div>
 {% endblock extra_table_head%}
@@ -19,6 +22,7 @@
       <th>Base</th>
       <th>Fichamento</th>
       <th>Rank</th>
+      <th>Citações Scholar</th>
     </tr>
   </thead>
   <tbody>
@@ -34,6 +38,7 @@
           {% endif %} 
         </td>
         <td class="td-editar"><a href="">{{ obj.rank }}</a></td>
+        <td>{{ obj.citado_papers_scholar }}</td>
       </tr>
     {% endfor %}
   </tbody>
