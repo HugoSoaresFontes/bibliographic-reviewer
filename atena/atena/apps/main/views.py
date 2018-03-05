@@ -48,10 +48,14 @@ class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     model = Documento
     queryset = Documento.objects.filter()
 
+    def get_queryset(self):
+        self.queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
+        return self.queryset
+
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
         context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
-        self.queryset = Documento.objects.filter(revisoes=kwargs.get('pk'))
+
         return context
 
 
@@ -59,10 +63,14 @@ class ClassificarDocumentosView(ListaDocumentosRevisaoView):
 
     def get(self, request, *args, **kwargs):
         docs = Documento.objects.filter(revisoes=kwargs.get('pk'), citado_papers_scholar=None)
-        for doc in docs[:2]:
+        for doc in docs:
             item = next(scholarly.search_pubs_query(doc.doi))
             if item:
-                doc.citado_papers_scholar = item.citedby
+                print(f'Obtendo "{doc.titulo}"')
+                try:
+                    doc.citado_papers_scholar = item.citedby
+                except:
+                    doc.citado_papers_scholar = -1
                 doc.citado_papers_scholar_data = datetime.utcnow()
                 doc.save()
 
