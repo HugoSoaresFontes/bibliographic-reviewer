@@ -107,7 +107,6 @@ class Fichamento(BaseModel):
         verbose_name = 'fichamentos'
         verbose_name_plural = 'fichamentos'
 
-
     def __unicode__(self):
         return self.documento.titulo
 

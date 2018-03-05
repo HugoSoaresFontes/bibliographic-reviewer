@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+from abc import ABCMeta, abstractmethod
+from urllib.parse import urlencode
 import requests
 from elsapy.elsclient import ElsClient
 from urllib.parse import urlencode, quote_plus
+from datetime import datetime
+from bs4 import BeautifulSoup as bsoup
 
 class IEEE_Xplore_Searcher():
     apikey = '8m22c725rj99bvxq6pftexqk'
@@ -220,3 +224,224 @@ class ElsevierSearcher:
                 print("a request completed...")
 
         return self.results
+
+
+class NCBI_Searcher(metaclass=ABCMeta):
+    """ 'Interface' que define a utilização da API das databases da NCBI.
+    """
+
+    search_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
+    meta_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
+    fetch_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
+
+    def search(self, queryterms: list = None, search_type: str = None,
+               start_year: int = 1900, end_year: int = None,
+               max_records: int = 20, start_record: int = 0,
+               author: str = None):
+        """
+        Realiza uma pesquisa NCBI.
+        @param queryterms: list of lists. Terms within the same list are
+            separated by an OR. Lists are separated by an AND
+        @param search_type: meta_data or querytext.
+            meta_data: This field enables a free-text search of all
+                configured metadata fields and the abstract.
+            querytext: This field enables a free-text search of all
+                fields.
+        @param start_year: Start value of Publication Year to restrict results by.
+        @param end_year: End value of Publication Year to restrict results by.
+        @param max_records: The number of records to fetch.
+        @param start_record: Sequence number of first record to fetch.
+        @param author: An author's name. Searches both first name and last name
+        @return: uma lista de títulos e IDs no formato [(title, id)]
+        """
+
+        term = self._search_term(queryterms, search_type=search_type)
+        if author:
+            term = "%s AND %s[Author]" % (term, author)
+
+        fixed_payload = {"retmode": "json", "datetype": "pdat",
+                         "db": self._db, "sort": self._sort_order}
+        payload = {"term": term,
+                   "retmax": max_records, "retstart": start_record,
+                   "mindate": start_year, "maxdate": end_year or datetime.now().year}
+        payload.update(fixed_payload)
+
+        url = "%s?%s" % (self.search_url, urlencode(payload))
+
+        response = requests.get(url).json()['esearchresult']
+
+        print('QTD. resultados: %s' % response['count'])
+
+        id_list = response['idlist']
+
+        if id_list:
+            return self._get_article_metadata(*id_list)
+        return []
+
+    def _search_term(self, queryterms: list, search_type: str = None):
+        """Monta o termo de pesquisa completo para mandar para a API."""
+
+        if search_type in ['querytext', None]:
+            # Retorna simplesmente a busca concatenando com os OR's e AND's
+            return "(%s)" % " AND ".join(["(%s)" % " OR ".join(orses) for orses in queryterms])
+        elif search_type != 'meta_data':
+            raise Exception('Tipo de pesquisa não faz sentido: %s\nTipos suportados:' % search_type)
+
+        # Retorna concacentando com os OR'S e AND's, mas embutindo também os campos de pesquisa em cada termo
+        queryterms = [[self._embutir_fields(orses) for orses in andes] for andes in queryterms]
+        return "(%s)" % " AND ".join(["(%s)" % " OR ".join(orses) for orses in queryterms])
+
+    def _embutir_fields(self, term: str):
+        """Faz uma transformação, embutindo fields no termo de pesquisa.
+        Isso é para poder realizar a pesquisa em apenas alguns campos ao invés de todos.
+        Exemplo: sendo self.__fields = ['title', 'abstract'],
+        a chamada
+        `self._embutir_fields("machine learning")`
+        Transforma:
+            machine learning ---> (machine learning[title] OR machine learning[abstract])
+        """
+
+        return "(%s)" % " OR ".join(["%s[%s]" % (term, field) for field in self._fields])
+
+    @abstractmethod
+    def _get_article_metadata(self, *args):
+        """Cada subclasse deverá implementar a função que pega o retorno da API e transforma numa lista de dicionários
+        no formato do modelo Documento."""
+        pass
+
+    @property
+    @abstractmethod
+    def _fields(self):
+        """Cada subclasse deverá definir quais serão os campos de pesquisa de cada termo.
+        O retorno deverá ser uma lista de fields.
+        Exemplo:
+        return ['title', 'abstract']
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def _db(self):
+        """Cada subclasse deverá definir o seu banco.
+        Exemplo:
+        return 'pmc'
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def _sort_order(self):
+        """Cada classe deverá definir o parâmetro sort_order.
+        Exemplo:
+        return 'Journal'
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def _article_url(self):
+        """Cada classe deverá definir a URL da página de um artigo."""
+        pass
+
+
+class PMC_Searcher(NCBI_Searcher):
+    """Realiza pesquisas na base PMC."""
+
+    @property
+    def _fields(self):
+        return ['Abstract', 'Body - Key Terms', 'MeSH Terms',
+                'MeSH Major Topic', 'Methods - Key Terms']
+
+    @property
+    def _db(self):
+        return 'pmc'
+
+    @property
+    def _sort_order(self):
+        return 'relevance'
+
+    @property
+    def _article_url(self):
+        return 'https://www.ncbi.nlm.nih.gov/pmc/articles/'
+
+    def _get_article_metadata(self, *args):
+        id_list = ','.join([str(x) for x in args])
+
+        payload = {"id": id_list, "db": self._db, "retmode": "xml"}
+        url = "%s?%s" % (self.fetch_url, urlencode(payload))
+        print(url)
+
+        soup = bsoup(requests.get(url).content, "xml")
+
+        pmc_articles = soup.findAll('article')
+
+        documentos = []
+        append = documentos.append
+        for p_art in pmc_articles:
+            author_list = p_art.findAll("contrib", {"contrib-type": "author"})
+            authors = ["%s %s" % (getattr(a, "given-names").text, a.surname.text) for a in author_list]
+            keywords = [k.text for k in p_art.findAll("kwd")]
+            pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
+            data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
+            pmc_id = soup.findAll("article-id", {"pub-id-type": 'pmc'})[0].text
+
+            documento = {}
+            documento['resumo'] = getattr(p_art.abstract, 'text', '')
+            documento['html_url'] = "%s%s" % (self._article_urlrece, pmc_id)
+            documento['autores'] = ",".join(authors)
+            documento['doi'] = p_art.findAll("article-id", {"pub-id-type": "doi"})[0].text
+            documento['palavras_chaves'] = ",".join(keywords)
+            documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
+            documento['titulo'] = getattr(p_art, "article-title").text
+            append(documento)
+
+        return documentos
+
+
+class PubMed_Searcher(NCBI_Searcher):
+    """Realiza pesquisas na base PubMed."""
+
+    @property
+    def _fields(self):
+        return ['Text Words']
+
+    @property
+    def _db(self):
+        return 'pubmed'
+
+    @property
+    def _sort_order(self):
+        return ''
+
+    @property
+    def _article_url(self):
+        return "https://www.ncbi.nlm.nih.gov/pubmed/"
+
+    def _get_article_metadata(self, *args):
+        id_list = ','.join([str(x) for x in args])
+
+        payload = {"id": id_list, "db": self._db, "retmode": "xml"}
+        url = "%s?%s" % (self.fetch_url, urlencode(payload))
+
+        soup = bsoup(requests.get(url).content, "xml")
+
+        pubmed_articles = soup.findAll('PubmedArticle')
+
+        documentos = []
+        append = documentos.append
+        for p_art in pubmed_articles:
+            authors = ["%s %s" % (a.ForeName.text, a.LastName.text) for a in p_art.findAll("Author")]
+            keywords = [k.text for k in p_art.findAll("Keyword")]
+            data_pub_string = "%s %s" % (p_art.PubDate.Year.text, p_art.PubDate.Month.text)
+
+            documento = {}
+            documento['resumo'] = getattr(p_art.AbstractText, 'text', '')
+            documento['html_url'] = "%s%s" % (self._article_url, p_art.PMID.text)
+            documento['autores'] = ",".join(authors)
+            documento['doi'] = p_art.findAll("ArticleId", {"IdType": "doi"})[0].text
+            documento['palavras_chaves'] = ",".join(keywords)
+            documento['data'] = datetime.strptime(data_pub_string, "%Y %b").date()
+            documento['titulo'] = p_art.ArticleTitle.text
+            append(documento)
+
+        return documentos

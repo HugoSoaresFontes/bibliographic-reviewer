@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from bs4 import BeautifulSoup as bsoup
+from datetime import datetime
 
 from contas.models import Usuario
 from .models import Documento
@@ -34,6 +36,7 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
 
 
 class DocumentoElsevierSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Documento
         fields = ['titulo', 'cadastrado_por']
@@ -56,3 +59,11 @@ class DocumentoElsevierSerializer(serializers.ModelSerializer):
             doc.revisoes.add(data['revisao'])
 
             return doc
+
+
+class NCBISerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Documento
+        fields = ['resumo', 'html_url', 'autores', 'doi', 'palavras_chaves',
+                  'data', 'titulo']
