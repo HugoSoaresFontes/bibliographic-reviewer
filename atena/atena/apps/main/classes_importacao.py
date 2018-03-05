@@ -391,7 +391,6 @@ class PMC_Searcher(NCBI_Searcher):
 
         payload = {"id": id_list, "db": self._db, "retmode": "xml"}
         url = "%s?%s" % (self.fetch_url, urlencode(payload))
-        print(url)
 
         soup = bsoup(requests.get(url).content, "xml")
 
