@@ -278,6 +278,8 @@ class NCBI_Searcher(metaclass=ABCMeta):
 
         url = "%s?%s" % (self.search_url, urlencode(payload))
 
+        print("Você pode realizar essa mesma busca no navegador pela com o termo de busca:\n%s" % term)
+
         response = requests.get(url).json()['esearchresult']
 
         print('QTD. resultados: %s' % response['count'])
@@ -408,8 +410,6 @@ class PMC_Searcher(NCBI_Searcher):
                     authors.append(author.text)
 
             keywords = [k.text for k in p_art.findAll("kwd")]
-            pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
-            data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
             pmc_id = soup.findAll("article-id", {"pub-id-type": 'pmc'})[0].text
 
             documento = {}
@@ -418,8 +418,16 @@ class PMC_Searcher(NCBI_Searcher):
             documento['autores'] = ",".join(authors)
             documento['doi'] = p_art.findAll("article-id", {"pub-id-type": "doi"})[0].text
             documento['palavras_chaves'] = ",".join(keywords)
-            documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
             documento['titulo'] = getattr(p_art, "article-title").text
+
+            try:
+                pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
+            except:
+                pub_date = p_art.findAll("pub-date", {"pub-type": "ppub"})[0]
+
+            data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
+            documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
+
             append(documento)
 
         return documentos
