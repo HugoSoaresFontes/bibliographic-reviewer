@@ -9,7 +9,8 @@ from base.mixins import LoginRequiredMixin, GroupRequiredMixin
 from .models import Revisao, Documento, Fichamento
 from .importar_arquivos import importar_arquivos
 from .forms import RevisaoForm, FichamentoForm
-
+import scholarly
+from datetime import datetime
 
 class IndexView(LoginRequiredMixin, BaseTemplateView):
     template = 'main/index.html'
@@ -47,11 +48,33 @@ class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     model = Documento
     queryset = Documento.objects.filter()
 
+    def get_queryset(self):
+        self.queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
+        return self.queryset
+
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
         context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
-        self.queryset = Documento.objects.filter(revisoes=kwargs.get('pk'))
+
         return context
+
+
+class ClassificarDocumentosView(ListaDocumentosRevisaoView):
+
+    def get(self, request, *args, **kwargs):
+        docs = Documento.objects.filter(revisoes=kwargs.get('pk'), citado_papers_scholar=None)
+        for doc in docs:
+            item = next(scholarly.search_pubs_query(doc.doi))
+            if item:
+                print(f'Obtendo "{doc.titulo}"')
+                try:
+                    doc.citado_papers_scholar = item.citedby
+                except:
+                    doc.citado_papers_scholar = -1
+                doc.citado_papers_scholar_data = datetime.utcnow()
+                doc.save()
+
+        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
 
 
 class ImportarDocumentosView(ListaDocumentosRevisaoView):
@@ -59,7 +82,7 @@ class ImportarDocumentosView(ListaDocumentosRevisaoView):
     def get(self,  request, *args, **kwargs):
         importar_arquivos(
             revisao=get_object_or_404(Revisao, id=kwargs['pk']), 
-            base="IEEE Xplore",
+            base="Science Direct",
             cadastrante=self.request.user
         )
         

@@ -12,7 +12,8 @@ urlpatterns = [
     url(r'^revisao/(?P<pk>\d+)/artigos$', ListaDocumentosRevisaoView.as_view(), name='ListaDocumentosRevisao'),
 
     url(r'^revisao/(?P<pk>\d+)/documentos/importar/$', ImportarDocumentosView.as_view(), name='ImportarDocumentos'),
-    url(r'^revisao/(?P<revisao_pk>\d+)/documento/fichamento/add/(?P<documento_pk>\d+)$', 
+    url(r'^revisao/(?P<pk>\d+)/documentos/classificar/$', ClassificarDocumentosView.as_view(), name='ClassificarDocumentos'),
+    url(r'^revisao/(?P<revisao_pk>\d+)/documento/fichamento/add/(?P<documento_pk>\d+)$',
     	CadastroFichamentoView.as_view(), name='CadastroFichamento'),
     url(r'^revisao/(?P<revisao_pk>\d+)/documento/(?P<documento_pk>\d+)/fichamento/(?P<pk>\d+)$', 
     	EdicaoFichamentoView.as_view(), name='EdicaoFichamento'),
