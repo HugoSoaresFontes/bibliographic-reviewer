@@ -240,7 +240,7 @@ class NCBI_Searcher(metaclass=ABCMeta):
     def search(self, queryterms: list = None, search_type: str = None,
                start_year: int = 1900, end_year: int = None,
                max_records: int = 20, start_record: int = 0,
-               author: str = None):
+               author: str = None, journal: str = None):
         """
         Realiza uma pesquisa NCBI.
         @param queryterms: list of lists. Terms within the same list are
@@ -255,12 +255,21 @@ class NCBI_Searcher(metaclass=ABCMeta):
         @param max_records: The number of records to fetch.
         @param start_record: Sequence number of first record to fetch.
         @param author: An author's name. Searches both first name and last name
-        @return: uma lista de títulos e IDs no formato [(title, id)]
+            Accepts a list of author names too.
+        @param journal: An author's name. Accepts a list of journals too.
+        @return: a dictionaries list whose keys are compatible with Documento model.
         """
 
         term = self._search_term(queryterms, search_type=search_type)
         if author:
-            term = "%s AND %s[Author]" % (term, author)
+            author = [author] if type(author) == str else author
+            func = lambda x, y: "%s AND %s[Author]" % (x, y)
+            term = reduce(func, journal, term)
+
+        if journal:
+            journal = [journal] if type(journal) == str else journal
+            func = lambda x, y: "%s AND %s[Journal]" % (x, y)
+            term = reduce(func, journal, term)
 
         fixed_payload = {"retmode": "json", "datetype": "pdat",
                          "db": self._db, "sort": self._sort_order}
@@ -270,6 +279,8 @@ class NCBI_Searcher(metaclass=ABCMeta):
         payload.update(fixed_payload)
 
         url = "%s?%s" % (self.search_url, urlencode(payload))
+
+        print("Você pode realizar essa mesma busca no navegador pela com o termo de busca:\n%s" % term)
 
         response = requests.get(url).json()['esearchresult']
 
@@ -401,8 +412,6 @@ class PMC_Searcher(NCBI_Searcher):
                     authors.append(author.text)
 
             keywords = [k.text for k in p_art.findAll("kwd")]
-            pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
-            data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
             pmc_id = soup.findAll("article-id", {"pub-id-type": 'pmc'})[0].text
 
             documento = {}
@@ -411,8 +420,16 @@ class PMC_Searcher(NCBI_Searcher):
             documento['autores'] = ",".join(authors)
             documento['doi'] = p_art.findAll("article-id", {"pub-id-type": "doi"})[0].text
             documento['palavras_chaves'] = ",".join(keywords)
-            documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
             documento['titulo'] = getattr(p_art, "article-title").text
+
+            try:
+                pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
+            except:
+                pub_date = p_art.findAll("pub-date", {"pub-type": "ppub"})[0]
+
+            data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
+            documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
+
             append(documento)
 
         return documentos
