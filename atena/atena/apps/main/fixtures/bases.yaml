@@ -1,0 +1,21 @@
+- model: main.base
+  pk: 1
+  fields: {nome: Ieee Xplore}
+- model: main.base
+  pk: 2
+  fields: {nome: Science Direct}
+- model: main.base
+  pk: 3
+  fields: {nome: Scopus}
+- model: main.base
+  pk: 4
+  fields: {nome: PubMed}
+- model: main.base
+  pk: 5
+  fields: {nome: PubMed Central (PMC)}
+- model: main.base
+  pk: 6
+  fields: {nome: Web Of Science}
+- model: main.base
+  pk: 7
+  fields: {nome: Springer}
