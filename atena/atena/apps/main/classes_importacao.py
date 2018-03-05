@@ -261,6 +261,7 @@ class NCBI_Searcher(metaclass=ABCMeta):
         term = self._search_term(queryterms, search_type=search_type)
         if author:
             author = [author] if type(author) == str else author
+            author = ['%s[Author]' % a for a in author]
             term = "%s AND (%s)" % (term, " OR ".join(author))
 
         if journal:
