@@ -56,11 +56,13 @@ class FichamentoForm(BaseForm):
 class SelecionarBaseForm(forms.Form):
     termos_de_tecnologias = forms.CharField(required=True)
     termos_da_saude = forms.CharField(required=True)
+    ano_inicio = forms.IntegerField(required=False)
+    ano_fim = forms.IntegerField(required=False)
     bases_de_pesquisa = forms.MultipleChoiceField(
         choices=(
             ('IEEE Xplore', 'IEEE Xplore'),
             ('Scopus', 'Scopus'),
-            # ('Web of Science', 'Web of Science'),
+            ('Web of Science', 'Web of Science'),
             ('Springer', 'Springer'),
             ('Science Direct', 'Science Direct'),
             ('PMC', 'PMC'),

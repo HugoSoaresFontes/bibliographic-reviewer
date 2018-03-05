@@ -99,14 +99,15 @@ class ImportarDocumentosView(FormView):
         termos_tecnologia = [x.strip() for x in data['termos_de_tecnologias'].split(',')]
         termos_saude = [x.strip() for x in data['termos_da_saude'].split(',')]
 
-        print(termos_tecnologia, termos_saude)
-
         for base in data['bases_de_pesquisa']:
+            print(base)
             importar_arquivos(
                 revisao=get_object_or_404(Revisao, id=data['revisao']),
                 base=base,
                 queryterms=[termos_tecnologia, termos_saude],
-                cadastrante=self.request.user
+                cadastrante=self.request.user,
+                ano_inicio=data.get('ano_inicio'),
+                ano_fim=data.get('ano_fim')
             )
 
         return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': data['revisao']}))

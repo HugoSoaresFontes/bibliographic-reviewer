@@ -194,8 +194,10 @@ class ElsevierSearcher:
         #         query_params['view'] = 'STANDARD'
 
         if start_year:
+            start_year = str(start_year)
             date = start_year
             if end_year:
+                end_year = str(end_year)
                 date += f'-{end_year}'
             query_params['date'] = date
         if content_type:

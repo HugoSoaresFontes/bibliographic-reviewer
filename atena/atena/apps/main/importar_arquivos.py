@@ -13,14 +13,15 @@ health_queryterms = [
     'Acute Cardiac Complications'
 ]
 
-queryterms = [technology_queryterms, health_queryterms]
+# queryterms = [technology_queryterms, health_queryterms]
 
 
-def importar_arquivos(revisao, queryterms, base, cadastrante):
+def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
     if base == "IEEE Xplore":
         ieee_searcher = IEEE_Xplore_Searcher()
-        documentos = ieee_searcher.search(queryterms=queryterms,
-                                          start_year=1975, content_type="Journals")
+        documentos = ieee_searcher.search(queryterms=queryterms, content_type="Journals",
+                                          start_year = kwargs.get('ano_inicio'), end_year = kwargs.get('ano_fim'))
+
         for doc in documentos:
             doc.update({
                 'revisao': revisao,
@@ -32,7 +33,7 @@ def importar_arquivos(revisao, queryterms, base, cadastrante):
     if base == "Science Direct":
         elsevier_searcher = ElsevierSearcher(index='scidir')
         documentos = elsevier_searcher.search(queryterms=queryterms,
-                                              start_year=2010)
+                                              start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
             doc.update({
                 'revisao': revisao,
@@ -41,11 +42,13 @@ def importar_arquivos(revisao, queryterms, base, cadastrante):
             serializer = DocumentoElsevierSerializer(data=doc)
             serializer.save(doc)
 
-    if base == "SCOPUS":
+    if base == "Scopus":
         elsevier_searcher = ElsevierSearcher(index='scopus')
         documentos = elsevier_searcher.search(queryterms=queryterms,
-                                              start_year=2010)
+                                              start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
+            if doc.get('dc:title') is None:
+                continue
             doc.update({
                 'revisao': revisao,
                 'cadastrado_por': cadastrante
@@ -54,7 +57,8 @@ def importar_arquivos(revisao, queryterms, base, cadastrante):
             serializer.save(doc)
 
     if base == "PubMed":
-        documentos = PubMed_Searcher().search(queryterms=queryterms, max_records=5)
+        documentos = PubMed_Searcher().search(queryterms=queryterms,
+                                              start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
             doc.update({
                 'revisao': revisao,
@@ -67,7 +71,8 @@ def importar_arquivos(revisao, queryterms, base, cadastrante):
                 print(doc['titulo'])
 
     if base == "PMC":
-        documentos = PMC_Searcher().search(queryterms=queryterms, max_records=5)
+        documentos = PMC_Searcher().search(queryterms=queryterms,
+                                           start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
             doc.update({
                 'revisao': revisao,
