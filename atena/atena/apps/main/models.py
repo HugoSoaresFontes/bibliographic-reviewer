@@ -75,6 +75,10 @@ class Documento(BaseModel):
         if fichamentos: 
             return dict(fichamentos)
 
+    @property
+    def bases_string(self):
+        return ','.join([a.nome for a in self.bases.all()])
+
     def __unicode__(self):
         return self.titulo
 

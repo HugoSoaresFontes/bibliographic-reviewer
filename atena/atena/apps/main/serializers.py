@@ -32,6 +32,7 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
             )
             doc.save()
             doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
             return doc
 
 
@@ -57,6 +58,7 @@ class DocumentoElsevierSerializer(serializers.ModelSerializer):
             )
             doc.save()
             doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
 
             return doc
 
@@ -66,4 +68,4 @@ class NCBISerializer(serializers.ModelSerializer):
     class Meta:
         model = Documento
         fields = ['resumo', 'html_url', 'autores', 'doi', 'palavras_chaves',
-                  'data', 'titulo']
+                  'data', 'titulo', 'cadastrado_por']
