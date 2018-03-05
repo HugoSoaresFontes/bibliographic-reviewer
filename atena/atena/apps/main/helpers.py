@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (Field, Submit, Div, Layout, HTML)
+from crispy_forms.layout import (Field, Submit, Div, Layout, HTML, Hidden)
 from django.shortcuts import reverse
 
 
@@ -51,6 +51,35 @@ class FichamentoHelper(FormHelper):
             Div(
                 Div(
                     Submit('submit', 'Salvar', css_class="btn pull-right"),
+                    css_class='form-group col-md-12'
+                ),
+                css_class="row"
+            )
+        )
+
+
+class SelecionarBaseHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(SelecionarBaseHelper, self).__init__(*args, **kwargs)
+
+        self.layout = Layout(
+            Div(
+                Field('termos_de_tecnologias', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('termos_da_saude',  css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('bases_de_pesquisa', css_class=""),
+                css_class='form-group col-md-12'
+            )
+            ,
+            Div(
+                Div(
+                    Field('revisao'),
+                    Submit('submit', 'Enviar', css_class="btn pull-right"),
                     css_class='form-group col-md-12'
                 ),
                 css_class="row"

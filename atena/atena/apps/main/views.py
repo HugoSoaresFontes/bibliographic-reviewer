@@ -6,9 +6,11 @@ from django.http import HttpResponseRedirect
 
 from base.views import BaseFormView, BaseTemplateView, BaseUpdateView, BaseListView
 from base.mixins import LoginRequiredMixin, GroupRequiredMixin
+from django.views.generic import FormView
+
 from .models import Revisao, Documento, Fichamento
 from .importar_arquivos import importar_arquivos
-from .forms import RevisaoForm, FichamentoForm
+from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm
 import scholarly
 from datetime import datetime
 
@@ -77,17 +79,38 @@ class ClassificarDocumentosView(ListaDocumentosRevisaoView):
         return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
 
 
-class ImportarDocumentosView(ListaDocumentosRevisaoView):
+class ImportarDocumentosView(FormView):
+    template_name = 'main/selecionar_bases.html'
+    form_class = SelecionarBaseForm
+    titulo_pagina = "Importar artigos"
 
-    def get(self,  request, *args, **kwargs):
-        importar_arquivos(
-            revisao=get_object_or_404(Revisao, id=kwargs['pk']), 
-            base="Science Direct",
-            cadastrante=self.request.user
-        )
-        
-        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk':kwargs['pk']}))
-        
+    def get_initial(self):
+        return {'revisao': self.kwargs['pk']}
+
+    def get_context_data(self, **kwargs):
+        context = super(ImportarDocumentosView, self).get_context_data(**kwargs)
+        context.update({'subtitulo_pagina': "Selecionar bases e termos de pesquisa"})
+        return context
+
+    def form_valid(self, form):
+        data = form.cleaned_data
+        print(data)
+
+        termos_tecnologia = [x.strip() for x in data['termos_de_tecnologias'].split(',')]
+        termos_saude = [x.strip() for x in data['termos_da_saude'].split(',')]
+
+        print(termos_tecnologia, termos_saude)
+
+        for base in data['bases_de_pesquisa']:
+            importar_arquivos(
+                revisao=get_object_or_404(Revisao, id=data['revisao']),
+                base=base,
+                queryterms=[termos_tecnologia, termos_saude],
+                cadastrante=self.request.user
+            )
+
+        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': data['revisao']}))
+
 
 class CadastroFichamentoView(GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Fichamento"

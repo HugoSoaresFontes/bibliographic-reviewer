@@ -16,7 +16,7 @@ health_queryterms = [
 queryterms = [technology_queryterms, health_queryterms]
 
 
-def importar_arquivos(revisao, base, cadastrante):
+def importar_arquivos(revisao, queryterms, base, cadastrante):
     if base == "IEEE Xplore":
         ieee_searcher = IEEE_Xplore_Searcher()
         documentos = ieee_searcher.search(queryterms=queryterms,

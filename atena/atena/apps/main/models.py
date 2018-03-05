@@ -27,7 +27,7 @@ class Documento(BaseModel):
     """ Documentos das revisões  """
     bases = models.ManyToManyField(Base)
 
-    titulo = models.CharField("Titulo", max_length=300, unique=True)
+    titulo = models.CharField("Titulo", max_length=300)
     resumo = models.TextField("Resumo")
     resumo_url = models.TextField("URL Resumo", null=True, blank=True)
     autores = models.TextField("Autores", null=True, blank=True)
@@ -36,7 +36,7 @@ class Documento(BaseModel):
                                         null=True, blank=True)
     citado_patentes = models.IntegerField("Número de patentes que citaram o artigo",
                                          null=True, blank=True)
-    doi = models.CharField("DOi", max_length=255, null=True, blank=True, unique=True)
+    doi = models.CharField("DOi", max_length=255, null=True, blank=True)
 
     html_url = models.CharField("Nome completo de um autor", max_length=255,
                                 null=True, blank=True)
@@ -55,6 +55,7 @@ class Documento(BaseModel):
         db_table = 'main_documentos'
         verbose_name = 'Documento'
         verbose_name_plural = 'Documentos'
+        unique_together = (("titulo", "doi"),)
 
     @property
     def lista_fichamentos_revisoes(self):
