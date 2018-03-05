@@ -8,7 +8,16 @@ from base.models import BaseModel
 
 
 #data_conferencia=)
-class Base(models.Model): 
+class Base(models.Model):
+    # Constantes apontam para o ID de cada classe (preenchidas automaticamente por uma fixture)
+    IEEE_XPLORE = 1
+    SCIENCE_DIRECT = 2
+    SCOPUS = 3
+    PUBMED = 4
+    PMC = 5
+    WEB_OF_SCIENCE = 6
+    SPRINGER = 7
+
     nome = models.CharField("Nome", max_length=255)
 
     class Meta:
@@ -66,6 +75,10 @@ class Documento(BaseModel):
         fichamentos = Fichamento.objects.filter(documento=self.id).values_list('revisao__id', 'id')
         if fichamentos: 
             return dict(fichamentos)
+
+    @property
+    def bases_string(self):
+        return ','.join([a.nome for a in self.bases.all()])
 
     def __unicode__(self):
         return self.titulo

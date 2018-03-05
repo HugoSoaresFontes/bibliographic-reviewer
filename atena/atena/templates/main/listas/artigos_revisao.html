@@ -29,7 +29,7 @@
     {% for  obj in lista %}
       <tr>
         <td> <a href=""> {{ obj.titulo }} </a></td>
-        <td> {% if obj.id == 51 %} {{ obj.dicionario_fichamentos_revisoes }} {% endif %}</td>
+        <td> {{ obj.bases_string }} </td>
         <td> 
           {% if revisao.id in obj.lista_fichamentos_revisoes %}
             <a href="{% url 'main:EdicaoFichamento' revisao.id obj.id  obj.dicionario_fichamentos_revisoes|get_item:revisao.id %}"> abrir </a> 

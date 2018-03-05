@@ -6,6 +6,7 @@ from elsapy.elsclient import ElsClient
 from urllib.parse import urlencode, quote_plus
 from datetime import datetime
 from bs4 import BeautifulSoup as bsoup
+from functools import reduce
 
 class IEEE_Xplore_Searcher():
     apikey = '8m22c725rj99bvxq6pftexqk'
@@ -305,6 +306,16 @@ class NCBI_Searcher(metaclass=ABCMeta):
 
         return "(%s)" % " OR ".join(["%s[%s]" % (term, field) for field in self._fields])
 
+    @staticmethod
+    def deepgetter(obj, attrs, default=None):
+        """Faz uma chamada sucessiva da função getattr, para ir pegando os atributos
+        de um objeto.
+        Exemplo:
+        deepgetter(Cidade, 'regiao.pais') é equivalente a fazer Cidade.regiao.pais
+        """
+        getter = lambda x, y: getattr(x, y, default)
+        return reduce(getter, attrs.split('.'), obj)
+
     @abstractmethod
     def _get_article_metadata(self, *args):
         """Cada subclasse deverá implementar a função que pega o retorno da API e transforma numa lista de dicionários
@@ -379,17 +390,24 @@ class PMC_Searcher(NCBI_Searcher):
 
         documentos = []
         append = documentos.append
+
         for p_art in pmc_articles:
             author_list = p_art.findAll("contrib", {"contrib-type": "author"})
-            authors = ["%s %s" % (getattr(a, "given-names").text, a.surname.text) for a in author_list]
+            authors = []
+            for author in author_list:
+                try:
+                    authors.append("%s %s" % (getattr(author, "given-names").text, author.surname.text))
+                except:
+                    authors.append(author.text)
+
             keywords = [k.text for k in p_art.findAll("kwd")]
             pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
             data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
             pmc_id = soup.findAll("article-id", {"pub-id-type": 'pmc'})[0].text
 
             documento = {}
-            documento['resumo'] = getattr(p_art.abstract, 'text', '')
-            documento['html_url'] = "%s%s" % (self._article_urlrece, pmc_id)
+            documento['resumo'] = getattr(p_art.abstract, 'text', ' - ')
+            documento['html_url'] = "%s%s" % (self._article_url, pmc_id)
             documento['autores'] = ",".join(authors)
             documento['doi'] = p_art.findAll("article-id", {"pub-id-type": "doi"})[0].text
             documento['palavras_chaves'] = ",".join(keywords)
@@ -431,13 +449,15 @@ class PubMed_Searcher(NCBI_Searcher):
 
         documentos = []
         append = documentos.append
+
         for p_art in pubmed_articles:
             authors = ["%s %s" % (a.ForeName.text, a.LastName.text) for a in p_art.findAll("Author")]
             keywords = [k.text for k in p_art.findAll("Keyword")]
-            data_pub_string = "%s %s" % (p_art.PubDate.Year.text, p_art.PubDate.Month.text)
+            data_pub_string = "%s %s" % (
+            p_art.PubDate.Year.text, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
 
             documento = {}
-            documento['resumo'] = getattr(p_art.AbstractText, 'text', '')
+            documento['resumo'] = getattr(p_art.AbstractText, 'text', ' - ')
             documento['html_url'] = "%s%s" % (self._article_url, p_art.PMID.text)
             documento['autores'] = ",".join(authors)
             documento['doi'] = p_art.findAll("ArticleId", {"IdType": "doi"})[0].text
