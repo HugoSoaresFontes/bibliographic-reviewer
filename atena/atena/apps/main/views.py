@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect
 
 from base.views import BaseFormView, BaseTemplateView, BaseUpdateView, BaseListView
 from base.mixins import LoginRequiredMixin, GroupRequiredMixin
+from django.views import View
 from django.views.generic import FormView
 
 from .models import Revisao, Documento, Fichamento
@@ -21,7 +22,9 @@ class IndexView(LoginRequiredMixin, BaseTemplateView):
 
 
 class SucessoView(BaseTemplateView):
-    template_name = 'sucesso.html'
+    template = 'sucesso.html'
+    titulo_pagina = "Operação realizada com sucesso"
+
          
 
 class CadastroRevisaoView(GroupRequiredMixin, BaseFormView):
@@ -113,6 +116,19 @@ class ImportarDocumentosView(FormView):
             )
 
         return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': data['revisao']}))
+
+
+class RemoverDocumentoRevisaoView(View):
+    def get(self, request, *args, **kwargs):
+        revisao = get_object_or_404(Revisao, id=self.kwargs['pk'])
+        docs_ids = request.GET.getlist('docs[]')
+        docs = Documento.objects.filter(id__in=docs_ids)
+
+        for doc in docs:
+            revisao.documentos.remove(doc)
+            Fichamento.objects.filter(documento=doc.id, revisao=revisao.id).delete()
+
+        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
 
 
 class CadastroFichamentoView(GroupRequiredMixin, BaseFormView):
