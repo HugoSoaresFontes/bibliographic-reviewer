@@ -87,8 +87,6 @@ class Documento(BaseModel):
         return self.titulo
 
 
-
-
 class Revisao(BaseModel):
     """ Revisões Bibliográficas """
     nome = models.CharField("Nome", max_length=90)
@@ -101,6 +99,25 @@ class Revisao(BaseModel):
         db_table = 'main_revisoes'
         verbose_name = 'Revisão'
         verbose_name_plural = 'Revisões'
+
+    def __unicode__(self):
+        return self.nome
+
+    def __str__(self):
+        return self.nome
+
+
+class Tag(BaseModel):
+    nome = models.CharField("nome", max_length=20)
+    cor = models.CharField("nome", max_length=6)
+
+    revisao = models.ForeignKey(Revisao, on_delete=models.CASCADE)
+    fichamentos = models.ManyToManyField(Documento, related_name='tags')
+
+    class Meta:
+        db_table = 'main_tags'
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tag'
 
     def __unicode__(self):
         return self.nome

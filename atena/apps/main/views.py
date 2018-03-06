@@ -71,7 +71,6 @@ class ClassificarDocumentosView(ListaDocumentosRevisaoView):
         for doc in docs:
             item = next(scholarly.search_pubs_query(doc.doi))
             if item:
-                print(f'Obtendo "{doc.titulo}"')
                 try:
                     doc.citado_papers_scholar = item.citedby
                 except:
@@ -149,3 +148,10 @@ class CadastroFichamentoView(GroupRequiredMixin, BaseFormView):
 
 class EdicaoFichamentoView(CadastroFichamentoView, BaseUpdateView):
     pass
+
+
+class CadastroTagView(GroupRequiredMixin, BaseFormView):
+    titulo_pagina = "Tag"
+    model = Revisao
+    form_class = RevisaoForm
+
