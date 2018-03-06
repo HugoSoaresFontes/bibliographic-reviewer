@@ -4,6 +4,7 @@
 idea/
 .idea/
 atena/.idea
+atena/static
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,0 +1,1 @@
+web: cd atena && gunicorn atena.wsgi --log-file -
