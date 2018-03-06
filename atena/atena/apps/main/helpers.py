@@ -72,6 +72,10 @@ class SelecionarBaseHelper(FormHelper):
                 css_class='form-group col-md-12'
             ),
             Div(
+                Field('revistas',  css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
                 Field('ano_inicio', css_class="form-control"),
                 css_class='form-group col-md-6'
             ),

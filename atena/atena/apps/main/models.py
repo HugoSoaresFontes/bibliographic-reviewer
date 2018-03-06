@@ -36,7 +36,7 @@ class Documento(BaseModel):
     """ Documentos das revisões  """
     bases = models.ManyToManyField(Base)
 
-    titulo = models.CharField("Titulo", max_length=300)
+    titulo = models.CharField("Titulo", max_length=2048)
     resumo = models.TextField("Resumo")
     resumo_url = models.TextField("URL Resumo", null=True, blank=True)
     autores = models.TextField("Autores", null=True, blank=True)

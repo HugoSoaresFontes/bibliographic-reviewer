@@ -98,6 +98,7 @@ class ImportarDocumentosView(FormView):
 
         termos_tecnologia = [x.strip() for x in data['termos_de_tecnologias'].split(',')]
         termos_saude = [x.strip() for x in data['termos_da_saude'].split(',')]
+        revistas = [x.strip() for x in data['revistas'].split(',')]
 
         for base in data['bases_de_pesquisa']:
             print(base)
@@ -107,7 +108,8 @@ class ImportarDocumentosView(FormView):
                 queryterms=[termos_tecnologia, termos_saude],
                 cadastrante=self.request.user,
                 ano_inicio=data.get('ano_inicio'),
-                ano_fim=data.get('ano_fim')
+                ano_fim=data.get('ano_fim'),
+                revistas=revistas
             )
 
         return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': data['revisao']}))

@@ -128,6 +128,7 @@ class ElsevierSearcher:
     def __init__(self, index: str, apikey: str = __api_key):
         self.articles_found = []
         self.apikey = apikey
+        self.index = index
         self.els_client = ElsClient(self.apikey)
         self._uri = self.__base_url + index + '?'
 
@@ -135,7 +136,7 @@ class ElsevierSearcher:
                start_year: int = None, end_year: int = None,
                content_type: str = 'journals', start_record: int = None,
                sort_field: str = None, sort_order: int = None,
-               max_records: int = None, article_title: str = None, author: list = None):
+               max_records: int = None, article_title: str = None, author: list = None, journal: list = None):
         """
         @param queryterms: list of lists. Terms within the same list are
             separated by an OR. Lists are separated by an AND
@@ -163,10 +164,11 @@ class ElsevierSearcher:
             following link https://developer.ieee.org/docs/read/Metadata_API_responses
         """
 
-        if not queryterms:
-            queryterms = self.queryterms
-
-        formated_query = "("
+        formated_query = ''
+        if self.index == 'scopus':
+            formated_query = "TITLE-ABS-KEY(("
+        if self.index == 'scidir':
+            formated_query = "tak(("
         for index_group, group in enumerate(queryterms):
             if index_group > 0:
                 formated_query += ' AND ('
@@ -175,22 +177,33 @@ class ElsevierSearcher:
             for index_term, term in enumerate(group):
                 if index_term > 0:
                     formated_query += ' OR '
-                if ' ' in term:
-                    formated_query += '('
                 formated_query += f'"{term}"'
-                if ' ' in term:
-                    formated_query += ')'
 
                 if (index_term + 1) == len(group):
                     formated_query += ')'
+        formated_query += ')'
+
         if author:
             str_author = ' AND '.join([f'"{x}"' for x in author])
-            formated_query += f' AND aut({str_author})'
+            if self.index == 'scopus':
+                formated_query += f' AND AUTHOR-NAME({str_author})'
+            if self.index == 'scidir':
+                formated_query += f' AND aut({str_author})'
         if article_title:
-            formated_query += f' AND ttl({article_title})'
+            if self.index == 'scopus':
+                formated_query += f' AND TITLE("{article_title}")'
+            if self.index == 'scidir':
+                formated_query += f' AND ttl("{article_title}")'
+        if journal:
+            str_journal = ' AND '.join([f'"{x}"' for x in journal])
+            if self.index == 'scopus':
+                formated_query += f' AND SRCTITLE({str_journal})'
+            if self.index == 'scidir':
+                formated_query += f' AND src({str_journal})'
 
         query_params = dict()
 
+        print(formated_query)
         query_params['query'] = formated_query
         #         query_params['view'] = 'STANDARD'
 

@@ -35,9 +35,12 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
     if base == "Science Direct":
         base_artigos = Base.objects.get(id=Base.SCIENCE_DIRECT)
         elsevier_searcher = ElsevierSearcher(index='scidir')
-        documentos = elsevier_searcher.search(queryterms=queryterms,
+        documentos = elsevier_searcher.search(queryterms=queryterms, journal=kwargs.get('revistas'),
                                               start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
+        print(documentos)
         for doc in documentos:
+            if doc.get('dc:title') is None:
+                continue
             doc.update({
                 'revisao': revisao,
                 'cadastrado_por': cadastrante,
@@ -49,7 +52,7 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
     if base == "Scopus":
         base_artigos = Base.objects.get(id=Base.SCOPUS)
         elsevier_searcher = ElsevierSearcher(index='scopus')
-        documentos = elsevier_searcher.search(queryterms=queryterms,
+        documentos = elsevier_searcher.search(queryterms=queryterms, journal=kwargs.get('revistas'),
                                               start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
             if doc.get('dc:title') is None:
@@ -65,7 +68,7 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
     if base == "PubMed":
         base_artigos = Base.objects.get(id=Base.PUBMED)
 
-        documentos = PubMed_Searcher().search(queryterms=queryterms,
+        documentos = PubMed_Searcher().search(queryterms=queryterms, journal=kwargs.get('revistas'),
                                               start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
             doc.update({
@@ -83,7 +86,7 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
     if base == "PMC":
         base_artigos = Base.objects.get(id=Base.PMC)
 
-        documentos = PMC_Searcher().search(queryterms=queryterms,
+        documentos = PMC_Searcher().search(queryterms=queryterms, journal=kwargs.get('revistas'),
                                            start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
             doc.update({

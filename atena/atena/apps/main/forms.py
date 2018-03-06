@@ -56,6 +56,7 @@ class FichamentoForm(BaseForm):
 class SelecionarBaseForm(forms.Form):
     termos_de_tecnologias = forms.CharField(required=True)
     termos_da_saude = forms.CharField(required=True)
+    revistas = forms.CharField(required=False)
     ano_inicio = forms.IntegerField(required=False)
     ano_fim = forms.IntegerField(required=False)
     bases_de_pesquisa = forms.MultipleChoiceField(
