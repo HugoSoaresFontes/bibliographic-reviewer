@@ -276,13 +276,13 @@ class NCBI_Searcher(metaclass=ABCMeta):
         term = self._search_term(queryterms, search_type=search_type)
         if author:
             author = [author] if type(author) == str else author
-            func = lambda x, y: "%s AND %s[Author]" % (x, y)
-            term = reduce(func, journal, term)
+            author = ['%s[Author]' % a for a in author]
+            term = "%s AND (%s)" % (term, " OR ".join(author))
 
         if journal:
             journal = [journal] if type(journal) == str else journal
-            func = lambda x, y: "%s AND %s[Journal]" % (x, y)
-            term = reduce(func, journal, term)
+            journal = ['"%s"[Journal]' % j for j in journal]
+            term = "%s AND (%s)" % (term, " OR ".join(journal))
 
         fixed_payload = {"retmode": "json", "datetype": "pdat",
                          "db": self._db, "sort": self._sort_order}
@@ -293,7 +293,7 @@ class NCBI_Searcher(metaclass=ABCMeta):
 
         url = "%s?%s" % (self.search_url, urlencode(payload))
 
-        print("Você pode realizar essa mesma busca no navegador pela com o termo de busca:\n%s" % term)
+        print("Você pode realizar essa mesma busca no navegador com o termo de busca:\n%s" % term)
 
         response = requests.get(url).json()['esearchresult']
 
@@ -406,7 +406,6 @@ class PMC_Searcher(NCBI_Searcher):
 
         payload = {"id": id_list, "db": self._db, "retmode": "xml"}
         url = "%s?%s" % (self.fetch_url, urlencode(payload))
-        print(url)
 
         soup = bsoup(requests.get(url).content, "xml")
 
