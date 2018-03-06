@@ -6,10 +6,14 @@ from django.http import HttpResponseRedirect
 
 from base.views import BaseFormView, BaseTemplateView, BaseUpdateView, BaseListView
 from base.mixins import LoginRequiredMixin, GroupRequiredMixin
+from django.views import View
+from django.views.generic import FormView
+
 from .models import Revisao, Documento, Fichamento
 from .importar_arquivos import importar_arquivos
-from .forms import RevisaoForm, FichamentoForm
-
+from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm
+import scholarly
+from datetime import datetime
 
 class IndexView(LoginRequiredMixin, BaseTemplateView):
     template = 'main/index.html'
@@ -18,7 +22,9 @@ class IndexView(LoginRequiredMixin, BaseTemplateView):
 
 
 class SucessoView(BaseTemplateView):
-    template_name = 'sucesso.html'
+    template = 'sucesso.html'
+    titulo_pagina = "Operação realizada com sucesso"
+
          
 
 class CadastroRevisaoView(GroupRequiredMixin, BaseFormView):
@@ -47,24 +53,83 @@ class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     model = Documento
     queryset = Documento.objects.filter()
 
+    def get_queryset(self):
+        self.queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
+        return self.queryset
+
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
         context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
-        self.queryset = Documento.objects.filter(revisoes=kwargs.get('pk'))
+
         return context
 
 
-class ImportarDocumentosView(ListaDocumentosRevisaoView):
+class ClassificarDocumentosView(ListaDocumentosRevisaoView):
 
-    def get(self,  request, *args, **kwargs):
-        importar_arquivos(
-            revisao=get_object_or_404(Revisao, id=kwargs['pk']), 
-            base="IEEE Xplore",
-            cadastrante=self.request.user
-        )
-        
-        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk':kwargs['pk']}))
-        
+    def get(self, request, *args, **kwargs):
+        docs = Documento.objects.filter(revisoes=kwargs.get('pk'), citado_papers_scholar=None)
+        for doc in docs:
+            item = next(scholarly.search_pubs_query(doc.doi))
+            if item:
+                print(f'Obtendo "{doc.titulo}"')
+                try:
+                    doc.citado_papers_scholar = item.citedby
+                except:
+                    doc.citado_papers_scholar = -1
+                doc.citado_papers_scholar_data = datetime.utcnow()
+                doc.save()
+
+        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
+
+
+class ImportarDocumentosView(FormView):
+    template_name = 'main/selecionar_bases.html'
+    form_class = SelecionarBaseForm
+    titulo_pagina = "Importar artigos"
+
+    def get_initial(self):
+        return {'revisao': self.kwargs['pk']}
+
+    def get_context_data(self, **kwargs):
+        context = super(ImportarDocumentosView, self).get_context_data(**kwargs)
+        context.update({'subtitulo_pagina': "Selecionar bases e termos de pesquisa"})
+        return context
+
+    def form_valid(self, form):
+        data = form.cleaned_data
+        print(data)
+
+        termos_tecnologia = [x.strip() for x in data['termos_de_tecnologias'].split(',')]
+        termos_saude = [x.strip() for x in data['termos_da_saude'].split(',')]
+        revistas = [x.strip() for x in data['revistas'].split(',')]
+
+        for base in data['bases_de_pesquisa']:
+            print(base)
+            importar_arquivos(
+                revisao=get_object_or_404(Revisao, id=data['revisao']),
+                base=base,
+                queryterms=[termos_tecnologia, termos_saude],
+                cadastrante=self.request.user,
+                ano_inicio=data.get('ano_inicio'),
+                ano_fim=data.get('ano_fim'),
+                revistas=revistas
+            )
+
+        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': data['revisao']}))
+
+
+class RemoverDocumentoRevisaoView(View):
+    def get(self, request, *args, **kwargs):
+        revisao = get_object_or_404(Revisao, id=self.kwargs['pk'])
+        docs_ids = request.GET.getlist('docs[]')
+        docs = Documento.objects.filter(id__in=docs_ids)
+
+        for doc in docs:
+            revisao.documentos.remove(doc)
+            Fichamento.objects.filter(documento=doc.id, revisao=revisao.id).delete()
+
+        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
+
 
 class CadastroFichamentoView(GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Fichamento"

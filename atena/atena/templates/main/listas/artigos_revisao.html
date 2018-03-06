@@ -5,7 +5,13 @@
 <div class="box-tools">
   <div class="input-group input-group-sm mr-10" style="width: 150px;">
     <div class="input-group-btn">
+      <a class="btn btn-default" onclick="return confirm('Você tem certeza que quer remover os artigos e fichamentos selecionados?')" id="delete-from-review" href="#">Remover artigos selecionados da revisão</a>
+    </div>
+    <div class="input-group-btn">
       <a class="btn btn-default pull-right" href="{% url 'main:ImportarDocumentos' revisao.id %}">Importar Artigos</a>
+    </div>
+    <div class="input-group-btn">
+      <a class="btn btn-default pull-right" href="{% url 'main:ClassificarDocumentos' revisao.id %}">Classificar artigos via Scholar</a>
     </div>
   </div>
 </div>
@@ -15,17 +21,19 @@
 <table class="table table-striped table-bordered">
   <thead>
     <tr>
+      <th><input type="checkbox" id="select-all"></th>
       <th>Titulo</th>
       <th>Base</th>
       <th>Fichamento</th>
-      <th>Rank</th>
+      <th>Citações Scholar</th>
     </tr>
   </thead>
   <tbody>
     {% for  obj in lista %}
       <tr>
+        <td><input type="checkbox" class="doc-selected" id="{{ obj.id }}" /></td>
         <td> <a href=""> {{ obj.titulo }} </a></td>
-        <td> {% if obj.id == 51 %} {{ obj.dicionario_fichamentos_revisoes }} {% endif %}</td>
+        <td> {{ obj.bases_string }} </td>
         <td> 
           {% if revisao.id in obj.lista_fichamentos_revisoes %}
             <a href="{% url 'main:EdicaoFichamento' revisao.id obj.id  obj.dicionario_fichamentos_revisoes|get_item:revisao.id %}"> abrir </a> 
@@ -33,10 +41,36 @@
             <a href="{% url 'main:CadastroFichamento' revisao.id obj.id  %}"> Começar fichamento </a> 
           {% endif %} 
         </td>
-        <td class="td-editar"><a href="">{{ obj.rank }}</a></td>
+        <td>{{ obj.citado_papers_scholar }}</td>
       </tr>
     {% endfor %}
   </tbody>
 </table>
 {% endblock tabela %}
 
+{% block extra_js %}
+<script type="text/javascript">
+  function typeOf(obj) {
+  return {}.toString.call(obj).split(' ')[1].slice(0, -1).toLowerCase();
+  }
+
+  $( document ).ready(function() {
+
+    changeFunc = function() {
+        console.log('trigger');
+        var idSelector = function() { return parseInt(this.id); };
+        docIds = $(".doc-selected:checked").map(idSelector).get() ;
+        $("#delete-from-review").attr('href', "{% url 'main:RemoverDocumentos' revisao.id %}?" + $.param({ docs: docIds }));
+    };
+    $("#select-all").click(function() {
+        $(".doc-selected").off();
+        $(".doc-selected").prop('checked', $(this).is(':checked'));
+        $(".doc-selected").change(changeFunc);
+        changeFunc();
+    });
+    $(".doc-selected").change(changeFunc);
+
+});
+
+</script>
+{% endblock extra_js %}

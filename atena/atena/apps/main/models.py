@@ -8,7 +8,16 @@ from base.models import BaseModel
 
 
 #data_conferencia=)
-class Base(models.Model): 
+class Base(models.Model):
+    # Constantes apontam para o ID de cada classe (preenchidas automaticamente por uma fixture)
+    IEEE_XPLORE = 1
+    SCIENCE_DIRECT = 2
+    SCOPUS = 3
+    PUBMED = 4
+    PMC = 5
+    WEB_OF_SCIENCE = 6
+    SPRINGER = 7
+
     nome = models.CharField("Nome", max_length=255)
 
     class Meta:
@@ -27,7 +36,7 @@ class Documento(BaseModel):
     """ Documentos das revisões  """
     bases = models.ManyToManyField(Base)
 
-    titulo = models.CharField("Titulo", max_length=300, unique=True)
+    titulo = models.CharField("Titulo", max_length=2048)
     resumo = models.TextField("Resumo")
     resumo_url = models.TextField("URL Resumo", null=True, blank=True)
     autores = models.TextField("Autores", null=True, blank=True)
@@ -36,15 +45,17 @@ class Documento(BaseModel):
                                         null=True, blank=True)
     citado_patentes = models.IntegerField("Número de patentes que citaram o artigo",
                                          null=True, blank=True)
-    doi = models.CharField("DOi", max_length=255, null=True, blank=True, unique=True)
+    doi = models.CharField("DOi", max_length=255, null=True, blank=True)
 
     html_url = models.CharField("Nome completo de um autor", max_length=255,
                                 null=True, blank=True)
     palavras_chaves = models.TextField("Termos do autor e da revista", null=True, blank=True)
 
     pdf_url	= models.CharField("URL do pdf", max_length=255, null=True, blank=True)
-    data = models.DateField("Data da pubicação", null=True, blank=True)
+    data = models.DateField("Data da publicação", null=True, blank=True)
     rank = models.IntegerField("Rank do artigo na pesquisa", null=True, blank=True)
+    citado_papers_scholar = models.IntegerField("Número de citações pelo Google Scholar", null=True, blank=True)
+    citado_papers_scholar_data = models.DateTimeField("Rank do artigo na pesquisa", null=True, blank=True)
 
     arquivo = models.FileField(
         upload_to='arquivos', verbose_name='Arquivo do documento')
@@ -53,6 +64,7 @@ class Documento(BaseModel):
         db_table = 'main_documentos'
         verbose_name = 'Documento'
         verbose_name_plural = 'Documentos'
+        unique_together = (("titulo", "doi"),)
 
     @property
     def lista_fichamentos_revisoes(self):
@@ -63,6 +75,10 @@ class Documento(BaseModel):
         fichamentos = Fichamento.objects.filter(documento=self.id).values_list('revisao__id', 'id')
         if fichamentos: 
             return dict(fichamentos)
+
+    @property
+    def bases_string(self):
+        return ','.join([a.nome for a in self.bases.all()])
 
     def __unicode__(self):
         return self.titulo
@@ -104,7 +120,6 @@ class Fichamento(BaseModel):
         db_table = 'main_fichamentos'
         verbose_name = 'fichamentos'
         verbose_name_plural = 'fichamentos'
-
 
     def __unicode__(self):
         return self.documento.titulo

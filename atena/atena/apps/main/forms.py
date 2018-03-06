@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django import forms
 
-from .helpers import RevisaoHelper, FichamentoHelper
+from .helpers import RevisaoHelper, FichamentoHelper, SelecionarBaseHelper
 from .models import Revisao, Documento, Fichamento
 from base.forms import BaseForm
 
@@ -51,3 +51,29 @@ class FichamentoForm(BaseForm):
 
 
         return fichamento
+
+
+class SelecionarBaseForm(forms.Form):
+    termos_de_tecnologias = forms.CharField(required=True)
+    termos_da_saude = forms.CharField(required=True)
+    revistas = forms.CharField(required=False)
+    ano_inicio = forms.IntegerField(required=False)
+    ano_fim = forms.IntegerField(required=False)
+    bases_de_pesquisa = forms.MultipleChoiceField(
+        choices=(
+            ('IEEE Xplore', 'IEEE Xplore'),
+            ('Scopus', 'Scopus'),
+            ('Web of Science', 'Web of Science'),
+            ('Springer', 'Springer'),
+            ('Science Direct', 'Science Direct'),
+            ('PMC', 'PMC'),
+            ('PubMed', 'PubMed')
+        ),
+        widget=forms.CheckboxSelectMultiple()
+    )
+    revisao = forms.IntegerField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super(SelecionarBaseForm, self).__init__(*args, **kwargs)
+        self.helper = SelecionarBaseHelper()
+
