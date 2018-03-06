@@ -1,1 +1,1 @@
-web: gunicorn atena.wsgi --log-file -
+web: gunicorn atena.wsgi -t 10000 --log-file -
