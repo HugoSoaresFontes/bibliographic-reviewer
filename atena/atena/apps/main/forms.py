@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django import forms
 
 from .helpers import RevisaoHelper, FichamentoHelper, SelecionarBaseHelper
-from .models import Revisao, Documento, Fichamento
+from .models import Revisao, Documento, Fichamento, Tag
 from base.forms import BaseForm
 
 
@@ -51,6 +51,25 @@ class FichamentoForm(BaseForm):
 
 
         return fichamento
+
+
+class TagForm(BaseForm):
+    class Meta:
+        model = Tag
+        fields = ['nome', 'cor']
+
+    def __init__(self, *args, **kwargs):
+        self.revisao = kwargs.pop('revisao')
+        super(TagForm, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        tag = super(FichamentoForm, self).save(commit=False)
+        tag.revisao = self.revisao
+
+        if commit:
+            tag.save()
+
+        return tag
 
 
 class SelecionarBaseForm(forms.Form):
