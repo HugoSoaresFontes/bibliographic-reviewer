@@ -46,11 +46,43 @@
       </div>
     </div>
   </div>
+
+  {% block extra_html %}
+  {% endblock %}
 {% endblock %}
 
-
-{% block extra_css %}
-{% endblock extra_css %}
-
 {% block extra_js %}
+<script>
+    console.log("tem js");
+    $(document).on("submit", "#tag_form", function(e) {
+        alert("e1")
+        e.preventDefault();
+        var self = $(this),
+            url = self.attr("action"),
+            ajax_req = $.ajax({
+                url: url,
+                type: "POST",
+                data: {
+                    nome: self.find("#id_nome").val(),
+                    cor: self.find("#id_cor").val()
+                },
+                success: function(data, textStatus, jqXHR) {
+                    alert("s1");
+                    django_message("Pony saved successfully.", "success");
+                },
+                error: function(data, textStatus, jqXHR) {
+                    alert("e2");
+                    var errors = $.parseJSON(data.responseText);
+                    $.each(errors, function(index, value) {
+                        if (index === "__all__") {
+                            django_message(value[0], "error");
+                        } else {
+                            apply_form_field_error(index, value);
+                        }
+                    });
+                }
+            });
+    });
+</script>
 {% endblock extra_js %}
+

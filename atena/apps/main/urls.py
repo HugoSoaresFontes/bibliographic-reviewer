@@ -20,5 +20,6 @@ urlpatterns = [
     url(r'^revisao/(?P<revisao_pk>\d+)/documento/(?P<documento_pk>\d+)/fichamento/(?P<pk>\d+)$', 
     	EdicaoFichamentoView.as_view(), name='EdicaoFichamento'),
 
+    url(r'^revisao/(?P<revisao_pk>\d+)/documentos/tags/add/$', CadastroTagView.as_view(), name='CadastroTag'),
 
 ]

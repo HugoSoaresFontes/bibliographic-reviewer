@@ -63,7 +63,7 @@ class TagForm(BaseForm):
         super(TagForm, self).__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        tag = super(FichamentoForm, self).save(commit=False)
+        tag = super(TagForm, self).save(commit=False)
         tag.revisao = self.revisao
 
         if commit:

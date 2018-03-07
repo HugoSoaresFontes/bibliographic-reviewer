@@ -1,18 +1,17 @@
 {% extends 'base/lista.html' %}
 {% load poll_extras %}
+{% load staticfiles %}
 
 {% block extra_table_head %}
 <div class="box-tools">
   <div class="input-group input-group-sm mr-10" style="width: 150px;">
     <div class="input-group-btn">
+      <a class="btn btn-default mr-10" data-toggle="control-sidebar"  href="#">Ações <i class="fa fa-gears"></i></a>
+    </div>
+    <div class="input-group-btn">
       <a class="btn btn-default" id="delete-from-review" href="#">Remover artigos selecionados da revisão</a>
     </div>
-    <div class="input-group-btn">
-      <a class="btn btn-default pull-right" href="{% url 'main:ImportarDocumentos' revisao.id %}">Importar Artigos</a>
-    </div>
-    <div class="input-group-btn">
-      <a class="btn btn-default pull-right" href="{% url 'main:ClassificarDocumentos' revisao.id %}">Classificar artigos via Scholar</a>
-    </div>
+
   </div>
 </div>
 {% endblock extra_table_head%}
@@ -49,11 +48,18 @@
 </table>
 {% endblock tabela %}
 
+{% block extra_html %}
+    {% include 'main/includes/artigos-revisoes-control-sidebar.html' %}
+<div class="colorpicker dropdown-menu colorpicker-with-alpha colorpicker-right colorpicker-hidden" style="top: 993px; left: 623px;"><div class="colorpicker-saturation" style="background-color: rgb(255, 0, 0);"><i style="left: 78.6517px; top: 65.098px;"><b></b></i></div><div class="colorpicker-hue"><i style="top: 100px;"></i></div><div class="colorpicker-alpha" style="background-color: rgb(89, 19, 19);"><i style="top: 0px;"></i></div><div class="colorpicker-color" style="background-color: rgb(89, 19, 19);"><div style="background-color: rgb(89, 19, 19);"></div></div><div class="colorpicker-selectors"></div></div>
+<div class="colorpicker dropdown-menu colorpicker-with-alpha colorpicker-right colorpicker-hidden" style="top: 1269px; left: 93px;"><div class="colorpicker-saturation" style="background-color: rgb(127, 0, 255);"><i style="left: 83.4101px; top: 14.902px;"><b></b></i></div><div class="colorpicker-hue"><i style="top: 25.046px; left: 0px;"></i></div><div class="colorpicker-alpha" style="background-color: rgb(126, 36, 217);"><i style="top: 0px;"></i></div><div class="colorpicker-color" style="background-color: rgb(126, 36, 217);"><div style="background-color: rgb(126, 36, 217);"></div></div><div class="colorpicker-selectors"></div></div>
+{% endblock extra_html %}
+
+
 {% block extra_js %}
-<script type="text/javascript">
-  function typeOf(obj) {
-  return {}.toString.call(obj).split(' ')[1].slice(0, -1).toLowerCase();
-  }
+    <script type="text/javascript">
+      function typeOf(obj) {
+      return {}.toString.call(obj).split(' ')[1].slice(0, -1).toLowerCase();
+      }
 
   function submit(action, method, values) {
     var form = $('<form/>', {
@@ -98,5 +104,11 @@
     });
 });
 
-</script>
+    </script>
+
+    <script src="{%  static 'admin-lte/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js' %}"></script>
 {% endblock extra_js %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'admin-lte/bower_components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css' %}">
+{% endblock %}
