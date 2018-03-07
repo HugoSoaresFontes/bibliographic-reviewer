@@ -5,8 +5,13 @@
     <meta charset="UTF-8">
     <title>Atena - {{ titulo_pagina }}</title>
     {% include 'base/includes/head.html' %}
+
     {% block extra_css %}
     {% endblock extra_css %}
+
+    {% include 'base/includes/base_scripts.html' %}
+    {% block extra_js %}
+    {% endblock extra_js %}
 </head>
   <body class="hold-transition skin-blue sidebar-mini">
     <div class="wrapper">
@@ -40,10 +45,5 @@
 
       </div>
     </div>
-
-    {% include 'base/includes/base_scripts.html' %}
-    {% block extra_js %}
-    {% endblock extra_js %}
-
   </body>
 </html>

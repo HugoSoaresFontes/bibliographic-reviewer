@@ -2,17 +2,17 @@
 from __future__ import unicode_literals
 
 from django.shortcuts import get_object_or_404, render, reverse
-from django.http import HttpResponseRedirect
-
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest, JsonResponse
 from base.views import BaseFormView, BaseTemplateView, BaseUpdateView, BaseListView
 from base.mixins import LoginRequiredMixin, GroupRequiredMixin
 from django.views import View
 from django.views.generic import FormView
 
-from .models import Revisao, Documento, Fichamento
+from .models import Revisao, Documento, Fichamento, Tag
 from .importar_arquivos import importar_arquivos
-from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm
+from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm, TagForm
 import scholarly
+import json
 from datetime import datetime
 
 class IndexView(LoginRequiredMixin, BaseTemplateView):
@@ -60,6 +60,7 @@ class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
         context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
+        context.update({'lista_tags': Tag.objects.filter(revisao=self.kwargs['pk'])})
 
         return context
 
@@ -152,6 +153,19 @@ class EdicaoFichamentoView(CadastroFichamentoView, BaseUpdateView):
 
 class CadastroTagView(GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Tag"
-    model = Revisao
-    form_class = RevisaoForm
+    model = Tag
+    form_class = TagForm
 
+    def get_form_kwargs(self):
+        kwargs = super(CadastroTagView, self).get_form_kwargs()
+        kwargs['revisao'] = get_object_or_404(Revisao, id=self.kwargs['revisao_pk'])
+
+        return kwargs
+
+    def form_valid(self, form):
+        if self.request.is_ajax():
+            self.object = form.save()
+            return JsonResponse({'tag': {'nome': self.object.nome,
+                                         'cor': self.object.cor,
+                                         'id': self.object.id,
+                                         }})

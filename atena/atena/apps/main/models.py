@@ -108,8 +108,8 @@ class Revisao(BaseModel):
 
 
 class Tag(BaseModel):
-    nome = models.CharField("nome", max_length=20)
-    cor = models.CharField("nome", max_length=6)
+    nome = models.CharField("Nome", max_length=20)
+    cor = models.CharField("Cor", max_length=7)
 
     revisao = models.ForeignKey(Revisao, on_delete=models.CASCADE)
     fichamentos = models.ManyToManyField(Documento, related_name='tags')
