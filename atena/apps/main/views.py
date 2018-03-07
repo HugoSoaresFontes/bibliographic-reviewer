@@ -8,6 +8,7 @@ from base.views import BaseFormView, BaseTemplateView, BaseUpdateView, BaseListV
 from base.mixins import LoginRequiredMixin, GroupRequiredMixin
 from django.views import View
 from django.views.generic import FormView
+from reversion.views import RevisionMixin
 
 from .models import Revisao, Documento, Fichamento
 from .importar_arquivos import importar_arquivos
@@ -27,7 +28,7 @@ class SucessoView(BaseTemplateView):
 
          
 
-class CadastroRevisaoView(GroupRequiredMixin, BaseFormView):
+class CadastroRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Revisão"
     model = Revisao
     form_class = RevisaoForm
@@ -36,7 +37,7 @@ class CadastroRevisaoView(GroupRequiredMixin, BaseFormView):
         print(form.errors)
 
 
-class EdicaoRevisaoView(CadastroRevisaoView, BaseUpdateView):
+class EdicaoRevisaoView(CadastroRevisaoView,RevisionMixin, BaseUpdateView):
     pass
 
 
@@ -81,7 +82,7 @@ class ClassificarDocumentosView(ListaDocumentosRevisaoView):
         return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
 
 
-class ImportarDocumentosView(FormView):
+class ImportarDocumentosView(RevisionMixin, FormView):
     template_name = 'main/selecionar_bases.html'
     form_class = SelecionarBaseForm
     titulo_pagina = "Importar artigos"
@@ -117,20 +118,19 @@ class ImportarDocumentosView(FormView):
         return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': data['revisao']}))
 
 
-class RemoverDocumentoRevisaoView(View):
-    def get(self, request, *args, **kwargs):
+class RemoverDocumentoRevisaoView(RevisionMixin, View):
+    def post(self, request, *args, **kwargs):
         revisao = get_object_or_404(Revisao, id=self.kwargs['pk'])
-        docs_ids = request.GET.getlist('docs[]')
+        docs_ids = request.POST.getlist('docs[]')
         docs = Documento.objects.filter(id__in=docs_ids)
-
         for doc in docs:
             revisao.documentos.remove(doc)
             Fichamento.objects.filter(documento=doc.id, revisao=revisao.id).delete()
 
-        return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
+        return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
 
-class CadastroFichamentoView(GroupRequiredMixin, BaseFormView):
+class CadastroFichamentoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Fichamento"
     model = Fichamento
     form_class = FichamentoForm
@@ -150,7 +150,7 @@ class EdicaoFichamentoView(CadastroFichamentoView, BaseUpdateView):
     pass
 
 
-class CadastroTagView(GroupRequiredMixin, BaseFormView):
+class CadastroTagView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Tag"
     model = Revisao
     form_class = RevisaoForm

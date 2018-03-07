@@ -50,6 +50,7 @@ DEFAULT_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crispy_forms',
+    'reversion',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + LOCAL_APPS

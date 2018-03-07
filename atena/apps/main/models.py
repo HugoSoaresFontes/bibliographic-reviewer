@@ -5,6 +5,7 @@ from django.db import models
 
 from contas.models import Usuario
 from base.models import BaseModel
+import reversion
 
 
 #data_conferencia=)
@@ -31,7 +32,7 @@ class Base(models.Model):
     def __str__(self):
         return self.nome
 
-
+@reversion.register()
 class Documento(BaseModel):
     """ Documentos das revisões  """
     bases = models.ManyToManyField(Base)
@@ -86,7 +87,7 @@ class Documento(BaseModel):
     def __str__(self):
         return self.titulo
 
-
+@reversion.register()
 class Revisao(BaseModel):
     """ Revisões Bibliográficas """
     nome = models.CharField("Nome", max_length=90)
@@ -126,6 +127,7 @@ class Tag(BaseModel):
         return self.nome
 
 
+@reversion.register()
 class Fichamento(BaseModel):
     documento = models.ForeignKey(Documento, on_delete=models.CASCADE, related_name="fichamentos")
     revisao = models.ForeignKey(Revisao, on_delete=models.CASCADE, related_name="fichamentos")
