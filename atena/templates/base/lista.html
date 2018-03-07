@@ -1,0 +1,88 @@
+{% extends 'base/base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">Lista</h3>
+          {% block extra_table_head %}
+          {% endblock extra_table_head %}
+         </div>
+        <div class="box-body">
+          {% block tabela %}
+          {% endblock tabela %}
+        </div>
+        <div class="box-footer clearfix">
+          Mostrando de {{ lista.start_index }} até  {{ lista.end_index }} de {{ lista.paginator.count }} registros
+          <ul class="pagination pagination-sm no-margin pull-right">
+            {% if lista.has_previous %}
+            <li class="paginate_button previous">
+              <a href="?{{ GET_params.urlencode }}&amp;pagina={{ lista.paginator.previous_page_number }}">Anterior</a>
+            </li>
+            {% else %}
+            <li class="paginate_button previous disabled"><a href="#">Anterior</a></li>
+            {% endif %}
+
+            {% for i in lista.page_range %}
+            <li {% if lista.number == i %} class="active" {% endif %}>
+              {% if not i %}
+                  <a href="#">...</a>
+              {% else %}
+                  <a href="?{{ GET_params.urlencode }}&amp;pagina={{ i }}">{{ i }}</a>
+              {% endif %}
+            </li>
+            {% endfor %}
+            {% if lista.has_next %}
+            <li class="paginate_button next">
+              <a href="?{{ GET_params.urlencode }}&amp;pagina={{ lista.next_page_number }}">Próxima</a>
+            </li>
+            {% else %}
+              <li class="paginate_button next disabled"><a href="#">Próxima</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% block extra_html %}
+  {% endblock %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    console.log("tem js");
+    $(document).on("submit", "#tag_form", function(e) {
+        alert("e1")
+        e.preventDefault();
+        var self = $(this),
+            url = self.attr("action"),
+            ajax_req = $.ajax({
+                url: url,
+                type: "POST",
+                data: {
+                    nome: self.find("#id_nome").val(),
+                    cor: self.find("#id_cor").val()
+                },
+                success: function(data, textStatus, jqXHR) {
+                    alert("s1");
+                    django_message("Pony saved successfully.", "success");
+                },
+                error: function(data, textStatus, jqXHR) {
+                    alert("e2");
+                    var errors = $.parseJSON(data.responseText);
+                    $.each(errors, function(index, value) {
+                        if (index === "__all__") {
+                            django_message(value[0], "error");
+                        } else {
+                            apply_form_field_error(index, value);
+                        }
+                    });
+                }
+            });
+    });
+</script>
+{% endblock extra_js %}
+

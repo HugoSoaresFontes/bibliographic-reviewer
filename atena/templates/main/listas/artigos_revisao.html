@@ -1,0 +1,114 @@
+{% extends 'base/lista.html' %}
+{% load poll_extras %}
+{% load staticfiles %}
+
+{% block extra_table_head %}
+<div class="box-tools">
+  <div class="input-group input-group-sm mr-10" style="width: 150px;">
+    <div class="input-group-btn">
+      <a class="btn btn-default mr-10" data-toggle="control-sidebar"  href="#">Ações <i class="fa fa-gears"></i></a>
+    </div>
+    <div class="input-group-btn">
+      <a class="btn btn-default" id="delete-from-review" href="#">Remover artigos selecionados da revisão</a>
+    </div>
+
+  </div>
+</div>
+{% endblock extra_table_head%}
+
+{% block tabela %}
+{% csrf_token %}
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th><input type="checkbox" id="select-all"></th>
+      <th>Titulo</th>
+      <th>Base</th>
+      <th>Fichamento</th>
+      <th>Citações Scholar</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for  obj in lista %}
+      <tr>
+        <td><input type="checkbox" class="doc-selected" id="{{ obj.id }}" /></td>
+        <td> <a href=""> {{ obj.titulo }} </a></td>
+        <td> {{ obj.bases_string }} </td>
+        <td> 
+          {% if revisao.id in obj.lista_fichamentos_revisoes %}
+            <a href="{% url 'main:EdicaoFichamento' revisao.id obj.id  obj.dicionario_fichamentos_revisoes|get_item:revisao.id %}"> abrir </a> 
+          {% else %} 
+            <a href="{% url 'main:CadastroFichamento' revisao.id obj.id  %}"> Começar fichamento </a> 
+          {% endif %} 
+        </td>
+        <td>{{ obj.citado_papers_scholar }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock tabela %}
+
+{% block extra_html %}
+    {% include 'main/includes/artigos-revisoes-control-sidebar.html' %}
+<div class="colorpicker dropdown-menu colorpicker-with-alpha colorpicker-right colorpicker-hidden" style="top: 993px; left: 623px;"><div class="colorpicker-saturation" style="background-color: rgb(255, 0, 0);"><i style="left: 78.6517px; top: 65.098px;"><b></b></i></div><div class="colorpicker-hue"><i style="top: 100px;"></i></div><div class="colorpicker-alpha" style="background-color: rgb(89, 19, 19);"><i style="top: 0px;"></i></div><div class="colorpicker-color" style="background-color: rgb(89, 19, 19);"><div style="background-color: rgb(89, 19, 19);"></div></div><div class="colorpicker-selectors"></div></div>
+<div class="colorpicker dropdown-menu colorpicker-with-alpha colorpicker-right colorpicker-hidden" style="top: 1269px; left: 93px;"><div class="colorpicker-saturation" style="background-color: rgb(127, 0, 255);"><i style="left: 83.4101px; top: 14.902px;"><b></b></i></div><div class="colorpicker-hue"><i style="top: 25.046px; left: 0px;"></i></div><div class="colorpicker-alpha" style="background-color: rgb(126, 36, 217);"><i style="top: 0px;"></i></div><div class="colorpicker-color" style="background-color: rgb(126, 36, 217);"><div style="background-color: rgb(126, 36, 217);"></div></div><div class="colorpicker-selectors"></div></div>
+{% endblock extra_html %}
+
+
+{% block extra_js %}
+    <script type="text/javascript">
+      function typeOf(obj) {
+      return {}.toString.call(obj).split(' ')[1].slice(0, -1).toLowerCase();
+      }
+
+  function submit(action, method, values) {
+    var form = $('<form/>', {
+        action: action,
+        method: method
+    });
+    $.each(values, function() {
+        form.append($('<input/>', {
+            type: 'hidden',
+            name: this.name,
+            value: this.value
+        }));
+    });
+    form.appendTo('body').submit();
+}
+
+
+  $(document).ready(function() {
+    changeFunc = function() {
+        console.log('trigger');
+        var idSelector = function() { return parseInt(this.id); };
+        docIds = $(".doc-selected:checked").map(idSelector).get() ;
+    };
+    $("#select-all").click(function() {
+        $(".doc-selected").prop('checked', $(this).is(':checked'));
+    });
+
+    $("#delete-from-review").click(function(e) {
+        if (confirm('Você tem certeza que quer remover os artigos e fichamentos selecionados?')){
+            var idSelector = function () {
+                return parseInt(this.id);
+            };
+            docIds = $(".doc-selected:checked").map(idSelector).get();
+            var idObj = function (v) {
+                return {name: 'docs[]', value: v};
+            };
+            docIds = docIds.map(idObj);
+            docIds.push({name: 'csrfmiddlewaretoken', value: jQuery("[name=csrfmiddlewaretoken]").val()});
+            submit("{% url 'main:RemoverDocumentos' revisao.id %}?", 'POST', docIds);
+        }
+        e.preventDefault();
+    });
+});
+
+    </script>
+
+    <script src="{%  static 'admin-lte/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js' %}"></script>
+{% endblock extra_js %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'admin-lte/bower_components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css' %}">
+{% endblock %}
