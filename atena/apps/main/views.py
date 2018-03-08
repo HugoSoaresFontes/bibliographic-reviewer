@@ -16,6 +16,7 @@ import scholarly
 import json
 from datetime import datetime
 
+
 class IndexView(LoginRequiredMixin, BaseTemplateView):
     template = 'main/index.html'
     titulo_pagina = "Início"
@@ -26,7 +27,24 @@ class SucessoView(BaseTemplateView):
     template = 'sucesso.html'
     titulo_pagina = "Operação realizada com sucesso"
 
-         
+
+class VisualizaDocumentoView(LoginRequiredMixin, BaseTemplateView):
+    template = 'main/documento.html'
+    titulo_pagina = "Documento"
+    subtitulo_pagina = "Visualização"
+
+    def get_context_data(self, **kwargs):
+        context = super(VisualizaDocumentoView, self).get_context_data(**kwargs)
+        context.update({'revisao': get_object_or_404(Revisao, id=self.kwargs['pk'])})
+        context.update({'documento': get_object_or_404(Documento, id=self.kwargs['pk_documento'])})
+        try:
+            context.update({'fichamento': Fichamento.objects.filter(documento=self.kwargs['pk_documento'],
+                                                                    revisao__id=self.kwargs['pk']).get()})
+        except Exception:
+            pass
+
+        return context
+
 
 class CadastroRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Revisão"

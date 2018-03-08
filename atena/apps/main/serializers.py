@@ -33,7 +33,14 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
             doc.save()
             doc.revisoes.add(data['revisao'])
             doc.bases.add(data['base'])
+
             return doc
+
+        elif Documento.objects.filter(titulo=data['title'], doi=data['doi'], revisoes=data['revisao']):
+            doc = Documento.objects.get(titulo=data['title'], doi=data['doi'], revisoes=data['revisao'])
+            doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
+
 
 
 class DocumentoElsevierSerializer(serializers.ModelSerializer):

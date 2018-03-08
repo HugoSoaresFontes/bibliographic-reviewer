@@ -30,6 +30,7 @@ class RevisaoForm(BaseForm):
 
 
 class FichamentoForm(BaseForm):
+    
 
     class Meta:
         model = Fichamento
