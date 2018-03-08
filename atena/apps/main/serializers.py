@@ -35,6 +35,12 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
             doc.bases.add(data['base'])
             return doc
 
+        else:
+            doc = Documento.objects.get(titulo=data['title'], doi=data['doi'])
+            doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
+
+            return doc
 
 class DocumentoElsevierSerializer(serializers.ModelSerializer):
 
@@ -62,6 +68,12 @@ class DocumentoElsevierSerializer(serializers.ModelSerializer):
 
             return doc
 
+        else:
+            doc = Documento.objects.get(titulo=data['title'], doi=data['doi'])
+            doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
+
+            return doc
 
 class NCBISerializer(serializers.ModelSerializer):
 
