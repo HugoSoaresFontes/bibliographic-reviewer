@@ -30,6 +30,9 @@ class RevisaoForm(BaseForm):
 
 
 class FichamentoForm(BaseForm):
+    tags = forms.ModelMultipleChoiceField(label='Tags', required=True,
+                                          queryset=Tag.objects.all())
+
 
     class Meta:
         model = Fichamento
@@ -39,6 +42,7 @@ class FichamentoForm(BaseForm):
         self.revisao = kwargs.pop('revisao')
         self.documento = kwargs.pop('documento')
         super(FichamentoForm, self).__init__(*args, **kwargs)
+        self.fields['tags'].queryset = Tag.objects.filter(revisao=self.revisao)
         self.helper = FichamentoHelper()
 
     def save(self, commit=True):

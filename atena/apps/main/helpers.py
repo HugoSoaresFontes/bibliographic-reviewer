@@ -37,6 +37,10 @@ class FichamentoHelper(FormHelper):
 
         self.layout = Layout(
             Div(
+                Field('tags', css_class="form-control select2-input"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
                 Field('caracteristicas_dados', css_class="form-control"),
                 css_class='form-group col-md-12'
             ),

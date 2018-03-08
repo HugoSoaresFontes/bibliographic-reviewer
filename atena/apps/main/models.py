@@ -113,7 +113,7 @@ class Tag(BaseModel):
     cor = models.CharField("Cor", max_length=7)
 
     revisao = models.ForeignKey(Revisao, on_delete=models.CASCADE)
-    fichamentos = models.ManyToManyField(Documento, related_name='tags')
+
 
     class Meta:
         db_table = 'main_tags'
@@ -134,6 +134,8 @@ class Fichamento(BaseModel):
     caracteristicas_dados = models.TextField("Características dos dados analisados", blank=True)
     citacoes = models.TextField("Citações", blank=True)
     anotacoes = models.TextField("Anotações gerais", blank=True)
+
+    tags = models.ManyToManyField(Tag, related_name='fichamentos')
 
     class Meta:
         db_table = 'main_fichamentos'
