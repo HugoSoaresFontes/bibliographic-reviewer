@@ -21,7 +21,6 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, 'apps'))
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -51,6 +50,7 @@ DEFAULT_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'reversion',
+    'martor',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + LOCAL_APPS
@@ -147,6 +147,34 @@ DATE_INPUT_FORMATS = [
 ]
 
 AUTH_USER_MODEL = 'contas.Usuario'
+
+
+# Global martor settings
+# Input: string boolean, `true/false`
+MARTOR_ENABLE_CONFIGS = {
+    'imgur': 'false',     # to enable/disable imgur/custom uploader.
+    'mention': 'false',  # to enable/disable mention
+    'jquery': 'false',    # to include/revoke jquery (require for admin default django)
+}
+
+# To setup the martor editor with label or not (default is False)
+MARTOR_ENABLE_LABEL = True
+
+# Markdown extensions (default)
+MARTOR_MARKDOWN_EXTENSIONS = [
+    'markdown.extensions.extra',
+    'markdown.extensions.nl2br',
+    'markdown.extensions.smarty',
+    'markdown.extensions.fenced_code',
+
+    # Custom markdown extensions.
+    'martor.extensions.urlize',
+    'martor.extensions.del_ins', # ~~strikethrough~~ and ++underscores++
+    'martor.extensions.mention', # require for mention
+    'martor.extensions.emoji',   # require for emoji
+]
+
+CSRF_COOKIE_HTTPONLY = False
 
 
 try:

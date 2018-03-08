@@ -12,7 +12,7 @@ from django.conf import settings
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-
+    url(r'^martor/', include('martor.urls')),
     url(r'^', include(('main.urls', 'main'), namespace='main')),
     url(r'^contas/', include(('contas.urls', 'contas'), namespace='contas')),
 
