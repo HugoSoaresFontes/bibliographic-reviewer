@@ -30,7 +30,7 @@ class RevisaoForm(BaseForm):
 
 
 class FichamentoForm(BaseForm):
-    
+
 
     class Meta:
         model = Fichamento
@@ -50,6 +50,7 @@ class FichamentoForm(BaseForm):
         
         if commit:
             fichamento.save()
+            self.save_m2m()
 
 
         return fichamento
