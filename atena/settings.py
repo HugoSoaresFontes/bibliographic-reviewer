@@ -51,6 +51,7 @@ DEFAULT_APPS = [
     'crispy_forms',
     'reversion',
     'martor',
+    'django_markup',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + LOCAL_APPS

@@ -32,7 +32,7 @@
     {% for  obj in lista %}
       <tr>
         <td><input type="checkbox" class="doc-selected" id="{{ obj.id }}" /></td>
-        <td> <a href=""> {{ obj.titulo }} </a></td>
+        <td> <a href="{% url 'main:VisualizarDocumento' revisao.id obj.id %}"> {{ obj.titulo }} </a></td>
         <td> {{ obj.bases_string }} </td>
         <td> 
           {% if revisao.id in obj.lista_fichamentos_revisoes %}

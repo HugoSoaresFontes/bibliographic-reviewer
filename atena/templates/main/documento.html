@@ -1,0 +1,58 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+{% load markup_tags %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-6 col-sm-6">
+    <div class="box box-primary">
+      <div class="box-header with-border">
+        <h3 class="box-title">Dados do documento</h3>
+      </div>
+      <div class="box-body">
+        <h4>Título</h4>
+        <p>{{ documento.titulo }}</p>
+        <br />
+        <h4>Autor</h4>
+        <p>{{ documento.autores }}</p>
+        <br />
+        <h4>Resumo</h4>
+        <p>{{ documento.resumo }}</p>
+        <br />
+        <h4>Revista</h4>
+        <p>{{ documento.revista }}</p>
+        <br />
+        <h4>Palavras-chave</h4>
+        <p>{{ documento.palavras_chaves }}</p>
+        <br />
+        <h4>Data</h4>
+        <p>{{ documento.data }}</p>
+        <br />
+        <h4>URL de Acesso</h4>
+        <p><a href="{{ documento.html_url }}">{{ documento.html_url }}</a></p>
+      </div>
+    </div>
+  </div>
+
+  {% if fichamento %}
+    <div class="col-md-6 col-sm-6">
+    <div class="box box-primary">
+      <div class="box-header with-border">
+        <h3 class="box-title">Fichamento associado</h3>
+      </div>
+      <div class="box-body">
+        <h4>Característica dos dados</h4>
+        <p>{{ fichamento.caracteristicas_dados|apply_markup:"markdown"  }}</p>
+        <br />
+        <h4>Citações</h4>
+        <p>{{ fichamento.citacoes|apply_markup:"markdown"  }}</p>
+        <br />
+        <h4>Anotações gerais</h4>
+        <p>{{ fichamento.anotacoes|apply_markup:"markdown"  }}</p>
+      </div>
+    </div>
+  </div>
+    {% endif %}
+
+</div>
+{% endblock content %}
