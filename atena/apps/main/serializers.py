@@ -33,6 +33,7 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
             doc.save()
             doc.revisoes.add(data['revisao'])
             doc.bases.add(data['base'])
+
             return doc
 
         else:
@@ -41,6 +42,7 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
             doc.bases.add(data['base'])
 
             return doc
+
 
 class DocumentoElsevierSerializer(serializers.ModelSerializer):
 

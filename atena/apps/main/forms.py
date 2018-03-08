@@ -30,9 +30,7 @@ class RevisaoForm(BaseForm):
 
 
 class FichamentoForm(BaseForm):
-    tags = forms.ModelMultipleChoiceField(label='Tags', required=True,
-                                          queryset=Tag.objects.all())
-
+    
 
     class Meta:
         model = Fichamento

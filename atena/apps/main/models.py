@@ -9,6 +9,9 @@ import reversion
 
 
 #data_conferencia=)
+from martor.models import MartorField
+
+
 class Base(models.Model):
     # Constantes apontam para o ID de cada classe (preenchidas automaticamente por uma fixture)
     IEEE_XPLORE = 1
@@ -131,9 +134,9 @@ class Tag(BaseModel):
 class Fichamento(BaseModel):
     documento = models.ForeignKey(Documento, on_delete=models.CASCADE, related_name="fichamentos")
     revisao = models.ForeignKey(Revisao, on_delete=models.CASCADE, related_name="fichamentos")
-    caracteristicas_dados = models.TextField("Características dos dados analisados", blank=True)
-    citacoes = models.TextField("Citações", blank=True)
-    anotacoes = models.TextField("Anotações gerais", blank=True)
+    caracteristicas_dados = MartorField("Características dos dados analisados", blank=True)
+    citacoes = MartorField("Citações", blank=True)
+    anotacoes = MartorField("Anotações gerais", blank=True)
 
     tags = models.ManyToManyField(Tag, related_name='fichamentos')
 
