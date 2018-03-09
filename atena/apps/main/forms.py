@@ -31,6 +31,26 @@ class RevisaoForm(BaseForm):
         return revisao
 
 
+class DocumentoForm(BaseForm):
+    class Meta:
+        model = Documento
+        exclude = ['revisao']
+
+    def __init__(self, *args, **kwargs):
+        self.revisao = kwargs.pop('revisao')
+        super(DocumentoForm, self).__init__(*args, **kwargs)
+        self.helper = FichamentoHelper()
+
+    def save(self, commit=True):
+        fichamento = super(FichamentoForm, self).save(commit=False)
+        fichamento.documento = self.documento
+        fichamento.revisao = self.revisao
+
+        if commit:
+            fichamento.save()
+            self.save_m2m()
+
+        return fichamento
 
 class FichamentoForm(BaseForm):
 

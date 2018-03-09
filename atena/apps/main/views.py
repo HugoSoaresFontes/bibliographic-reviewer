@@ -63,16 +63,29 @@ class ListaRevisoesView(GroupRequiredMixin, BaseListView):
     template_name = 'main/listas/revisoes.html'
     titulo_pagina = "Revisões"
     model = Revisao
-    queryset = Revisao.objects.filter()
 
     def get_queryset(self):
         return Revisao.objects.filter(usuarios=self.request.user)
+
+
+class CadastroRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
+    titulo_pagina = "Documento"
+    model = Documento
+    form_class = DocumentoForm
+
+    def get_success_url(self):
+        return reverse('main:ListaDocumentosRevisao', kwargs={'pk': self.kwargs['revisao_pk']})
+
+    def get_form_kwargs(self):
+        kwargs = super(CadastroRevisaoView, self).get_form_kwargs()
+        kwargs['revisao'] = get_object_or_404(Revisao, id=self.kwargs['revisao_pk'])
+
+        return kwargs
 
 class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     template_name = 'main/listas/artigos_revisao.html'
     titulo_pagina = "Documentos"
     model = Documento
-    queryset = Documento.objects.filter()
 
     def get_queryset(self):
         self.queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
