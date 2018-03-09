@@ -25,12 +25,14 @@ class RevisaoForm(BaseForm):
             revisao.save()
             self.save_m2m()
 
+            if self.usuario not in revisao.usuarios.all():
+                revisao.usuarios.add(self.usuario)
 
         return revisao
 
 
-class FichamentoForm(BaseForm):
 
+class FichamentoForm(BaseForm):
 
     class Meta:
         model = Fichamento
@@ -42,6 +44,7 @@ class FichamentoForm(BaseForm):
         super(FichamentoForm, self).__init__(*args, **kwargs)
         self.fields['tags'].queryset = Tag.objects.filter(revisao=self.revisao)
         self.helper = FichamentoHelper()
+
 
     def save(self, commit=True):
         fichamento = super(FichamentoForm, self).save(commit=False)

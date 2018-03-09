@@ -51,8 +51,8 @@ class CadastroRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     model = Revisao
     form_class = RevisaoForm
 
-    def form_invalid(self, form):
-        print(form.errors)
+    def get_success_url(self):
+        return reverse('main:ListaRevisoes')
 
 
 class EdicaoRevisaoView(CadastroRevisaoView,RevisionMixin, BaseUpdateView):
@@ -65,6 +65,8 @@ class ListaRevisoesView(GroupRequiredMixin, BaseListView):
     model = Revisao
     queryset = Revisao.objects.filter()
 
+    def get_queryset(self):
+        return Revisao.objects.filter(usuarios=self.request.user)
 
 class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     template_name = 'main/listas/artigos_revisao.html'
