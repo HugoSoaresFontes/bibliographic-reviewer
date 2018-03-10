@@ -288,10 +288,12 @@ class NCBI_Searcher(metaclass=ABCMeta):
                          "db": self._db, "sort": self._sort_order}
         payload = {"term": term,
                    "retmax": max_records, "retstart": start_record,
-                   "mindate": start_year, "maxdate": end_year or datetime.now().year}
+                   "mindate": start_year or '', "maxdate": end_year or datetime.now().year}
         payload.update(fixed_payload)
 
         url = "%s?%s" % (self.search_url, urlencode(payload))
+
+        print("URL SEARCH: %s" % url)
 
         print("Você pode realizar essa mesma busca no navegador com o termo de busca:\n%s" % term)
 
@@ -406,6 +408,7 @@ class PMC_Searcher(NCBI_Searcher):
 
         payload = {"id": id_list, "db": self._db, "retmode": "xml"}
         url = "%s?%s" % (self.fetch_url, urlencode(payload))
+        print("URL META: %s" % url)
 
         soup = bsoup(requests.get(url).content, "xml")
 
@@ -472,6 +475,8 @@ class PubMed_Searcher(NCBI_Searcher):
         payload = {"id": id_list, "db": self._db, "retmode": "xml"}
         url = "%s?%s" % (self.fetch_url, urlencode(payload))
 
+        print("URL META: %s" % url)
+
         soup = bsoup(requests.get(url).content, "xml")
 
         pubmed_articles = soup.findAll('PubmedArticle')
@@ -483,7 +488,7 @@ class PubMed_Searcher(NCBI_Searcher):
             authors = ["%s %s" % (a.ForeName.text, a.LastName.text) for a in p_art.findAll("Author")]
             keywords = [k.text for k in p_art.findAll("Keyword")]
             data_pub_string = "%s %s" % (
-            p_art.PubDate.Year.text, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
+                p_art.PubDate.Year.text, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
 
             documento = {}
             documento['resumo'] = getattr(p_art.AbstractText, 'text', ' - ')
