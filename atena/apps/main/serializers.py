@@ -76,3 +76,19 @@ class NCBISerializer(serializers.ModelSerializer):
         model = Documento
         fields = ['resumo', 'html_url', 'autores', 'doi', 'palavras_chaves',
                   'data', 'titulo', 'cadastrado_por']
+
+    def save(self, data):
+        payload = {k:v for k,v in data.items() if k in self.Meta.fields}
+
+        if not Documento.objects.filter(titulo=data.get('titulo'), doi=data.get('doi')):
+            doc = Documento.objects.create(**payload)
+            doc.save()
+            doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
+
+            return doc
+
+        else:
+            doc = Documento.objects.get(titulo=data['titulo'], doi=data['doi'])
+            doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
