@@ -82,9 +82,6 @@ class CadastroDocumentoRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormVi
 
         return kwargs
 
-    def form_invalid(self, form):
-        print(form.errors)
-        super(CadastroDocumentoRevisaoView, self).form_invalid(form)
 
 class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     template_name = 'main/listas/artigos_revisao.html'
@@ -206,3 +203,18 @@ class CadastroTagView(RevisionMixin, GroupRequiredMixin, BaseFormView):
                                          'cor': self.object.cor,
                                          'id': self.object.id,
                                          }})
+
+
+def handler400(request):
+    return render(request, 'main/erros/400.html')
+
+def handler404(request):
+    return render(request, 'main/erros/404.html')
+
+
+def handler403(request):
+    return render(request, 'main/erros/403.html')
+
+
+def handler500(request):
+    return render(request, 'main/erros/500.html')

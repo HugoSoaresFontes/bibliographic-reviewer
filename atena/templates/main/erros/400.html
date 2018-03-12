@@ -1,0 +1,23 @@
+{% extends 'base/base.html' %}
+{% load static %}
+  
+{% block content %}
+ <div class="row">
+  <div class="col-sm-12 col-md-6" style=" padding-left: 90px;">
+    <img width="400px;" src="{% static 'img/400.svg' %}" alt="">
+  </div>
+  
+
+  <div class="col-sm-12 col-md-6" style="padding:70px; padding-left: 30px;">
+    <h3><img src="{% static 'img/confused.png' %}" style="width:50px;" alt=""> Oops! Algo não está certo...</h3>
+
+    <p>
+     Trabalharemos para consertar isso imediatamente. Por enquanto, você pode retornar a 
+     <a href="{% url 'main:index' %} "> página inicial </a> ou 
+     <a href="{% url 'comum:CadastroReport' %}"> nos contar </a> sobre o ocorrido.
+    </p>
+  </div>
+</div>
+<!-- /.error-page -->
+{% endblock content %}
+

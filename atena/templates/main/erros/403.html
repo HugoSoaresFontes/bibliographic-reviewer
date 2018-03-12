@@ -1,0 +1,22 @@
+{% extends 'base/base.html' %}
+{% load static %}
+  
+{% block content %}
+ <div class="row">
+  <div class="col-sm-12 col-md-6" style=" padding-left: 90px;">
+    <img width="400px;" src="{% static 'img/403.svg' %}" alt="">
+  </div>
+  
+
+  <div class="col-sm-12 col-md-6" style="padding:70px; padding-left: 30px;">
+    <h3><i class="fa fa-warning" style="font-size: 30px; color:#ff999e"></i> Oops! Você não tem autorização para acessar essa página.</h3>
+
+    <p>
+     Você pode retornar à 
+     <a href="{% url 'main:index' %} "> página inicial </a>. Se você acredita que não deveria estar vendo isso, por favor 
+     <a href="{% url 'comum:CadastroReport' %}"> nos conte </a> sobre o ocorrido.
+    </p>
+  </div>
+</div>
+<!-- /.error-page -->
+{% endblock content %}
