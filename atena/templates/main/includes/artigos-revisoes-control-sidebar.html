@@ -116,7 +116,15 @@
     <div id="control-sidebar-theme-demo-options-tab" class="tab-pane active">
         <div>
             <div class="input-group-btn">
-              <a class="btn btn-default" style="width: 200px;" href="{% url 'main:ImportarDocumentos' revisao.id %}">Importar Artigos</a>
+              <a class="btn btn-default" style="width: 200px;" href="{% url 'main:CadastroDocumentoRevisao' revisao.id %}">
+                Add um artigo
+              </a>
+            </div> 
+            <br>           
+            <div class="input-group-btn">
+              <a class="btn btn-default" style="width: 200px;" href="{% url 'main:ImportarDocumentos' revisao.id %}">   
+                Importar Artigos das Bases
+              </a>
             </div>
             <br>
             <div class="input-group-btn">

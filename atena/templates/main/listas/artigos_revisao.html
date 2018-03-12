@@ -1,5 +1,6 @@
 {% extends 'base/lista.html' %}
 {% load poll_extras %}
+{% load extras %}
 {% load staticfiles %}
 
 {% block extra_table_head %}
@@ -29,8 +30,9 @@
       <tr>
         <td><input type="checkbox" class="doc-selected" id="{{ obj.id }}" /></td>
         <td>
-            {% for tag in obj.tags.all %}
-
+            {% for tag in obj|tags:revisao %}
+              <span class="tag" title="{{tag.nome}}" style="background-color: {{tag.cor}}"></span>
+              {% if forloop.last %} <br> {% endif %}
             {% endfor %}
 
             <a href="{% url 'main:VisualizarDocumento' revisao.id obj.id %}"> {{ obj.titulo }} </a>

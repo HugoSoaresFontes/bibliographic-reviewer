@@ -49,20 +49,21 @@ class Documento(BaseModel):
                                         null=True, blank=True)
     citado_patentes = models.IntegerField("Número de patentes que citaram o artigo",
                                          null=True, blank=True)
-    doi = models.CharField("DOi", max_length=255, null=True, blank=True)
+    doi = models.CharField("DOI", max_length=255, null=True, blank=True)
 
     html_url = models.CharField("Nome completo de um autor", max_length=255,
                                 null=True, blank=True)
-    palavras_chaves = models.TextField("Termos do autor e da revista", null=True, blank=True)
+    palavras_chaves = models.TextField("Palavra chaves", null=True, blank=True)
 
     pdf_url	= models.CharField("URL do pdf", max_length=255, null=True, blank=True)
     data = models.DateField("Data da publicação", null=True, blank=True)
     rank = models.IntegerField("Rank do artigo na pesquisa", null=True, blank=True)
     citado_papers_scholar = models.IntegerField("Número de citações pelo Google Scholar", null=True, blank=True)
-    citado_papers_scholar_data = models.DateTimeField("Rank do artigo na pesquisa", null=True, blank=True)
+    citado_papers_scholar_data = models.DateTimeField("Data de verificação no Google Scholar", null=True, blank=True)
 
     arquivo = models.FileField(
-        upload_to='arquivos', verbose_name='Arquivo do documento')
+        upload_to='arquivos', verbose_name='Arquivo do documento', 
+        blank=True, null=True)
 
     class Meta:
         db_table = 'main_documentos'

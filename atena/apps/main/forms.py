@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django import forms
 
-from .helpers import RevisaoHelper, FichamentoHelper, SelecionarBaseHelper
+from .helpers import RevisaoHelper, FichamentoHelper, SelecionarBaseHelper, DocumentoHelper
 from .models import Revisao, Documento, Fichamento, Tag
 from base.forms import BaseForm
 
@@ -39,18 +39,20 @@ class DocumentoForm(BaseForm):
     def __init__(self, *args, **kwargs):
         self.revisao = kwargs.pop('revisao')
         super(DocumentoForm, self).__init__(*args, **kwargs)
-        self.helper = FichamentoHelper()
+        self.helper = DocumentoHelper()
 
     def save(self, commit=True):
-        fichamento = super(FichamentoForm, self).save(commit=False)
-        fichamento.documento = self.documento
-        fichamento.revisao = self.revisao
+        documento = super(DocumentoForm, self).save(commit=False)
+        
 
         if commit:
-            fichamento.save()
+            documento.save()
             self.save_m2m()
+            if self.revisao: 
+                self.revisao.documentos.add(documento)
 
-        return fichamento
+        return documento
+
 
 class FichamentoForm(BaseForm):
 

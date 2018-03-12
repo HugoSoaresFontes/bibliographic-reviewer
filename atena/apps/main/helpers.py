@@ -31,6 +31,78 @@ class RevisaoHelper(FormHelper):
         )
 
 
+class DocumentoHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(DocumentoHelper, self).__init__(*args, **kwargs)
+
+        self.layout = Layout(
+            Div(
+                Field('titulo', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('doi', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('palavras_chaves', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('bases', css_class="form-control select2-input    "),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('autores',  rows=2, css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('revista', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('citado_papers', css_class="form-control"),
+                css_class='form-group col-md-3'
+            ),
+            Div(
+                Field('citado_patentes', css_class="form-control"),
+                css_class='form-group col-md-3'
+            ),
+            Div(
+                Field('citado_papers_scholar', css_class="form-control"),
+                css_class='form-group col-md-3'
+            ),
+            Div(
+                Field('citado_papers_scholar_data', css_class="form-control"),
+                css_class='form-group col-md-3'
+            ),
+            Div(
+                Field('html_url', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('resumo', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('resumo_url', required=False, rouws=1, css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
+                Field('arquivo', required=False, rouws=1, css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            
+            Div(
+                Div(
+                    Submit('submit', 'Salvar', css_class="btn pull-right"),
+                    css_class='form-group col-md-12'
+                ),
+                css_class="row"
+            )
+        )
+
+
 class FichamentoHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super(FichamentoHelper, self).__init__(*args, **kwargs)
