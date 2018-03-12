@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% load crispy_forms_tags %}
+
+<html>
+<head>
+  {% include 'base/includes/head.html' %}
+</head>
+<body class="hold-transition login-page">
+<div class="login-box">
+  <!-- /.login-logo -->
+  <div class="login-box-body">
+    <h3 class="login-box-msg">Deixe Atena te ajudar no seu trabalho!</h3>
+    {% crispy form %}
+    <br>
+    <div class="social-auth-links text-center">
+      <p>- Assistente de Revisão Bibliográfica -</p>
+
+    </div>
+    <!-- /.social-auth-links -->
+  </div>
+  <!-- /.login-box-body -->
+</div>
+<!-- /.login-box -->
+</body>
+</html>

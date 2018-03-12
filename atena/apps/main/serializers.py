@@ -37,11 +37,12 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
 
             return doc
 
-        elif Documento.objects.filter(titulo=data['title'], doi=data['doi'], revisoes=data['revisao']):
-            doc = Documento.objects.get(titulo=data['title'], doi=data['doi'], revisoes=data['revisao'])
+        else:
+            doc = Documento.objects.get(titulo=data['title'], doi=data['doi'])
             doc.revisoes.add(data['revisao'])
             doc.bases.add(data['base'])
 
+            return doc
 
 
 class DocumentoElsevierSerializer(serializers.ModelSerializer):
@@ -70,6 +71,12 @@ class DocumentoElsevierSerializer(serializers.ModelSerializer):
 
             return doc
 
+        else:
+            doc = Documento.objects.get(titulo=data['title'], doi=data['doi'])
+            doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
+
+            return doc
 
 class DocumentoSpringerSerializer(serializers.ModelSerializer):
 

@@ -6,12 +6,8 @@
 <div class="box-tools">
   <div class="input-group input-group-sm mr-10" style="width: 150px;">
     <div class="input-group-btn">
-      <a class="btn btn-default mr-10" data-toggle="control-sidebar"  href="#">Ações <i class="fa fa-gears"></i></a>
+      <a class="btn btn-default pull-right" style="width: 100px;" data-toggle="control-sidebar"  href="#">Ações <i class="fa fa-gears"></i></a>
     </div>
-    <div class="input-group-btn">
-      <a class="btn btn-default" id="delete-from-review" href="#">Remover artigos selecionados da revisão</a>
-    </div>
-
   </div>
 </div>
 {% endblock extra_table_head%}
@@ -21,7 +17,7 @@
 <table class="table table-striped table-bordered">
   <thead>
     <tr>
-      <th><input type="checkbox" id="select-all"></th>
+      <th><input type="checkbox" id="select-all"> <a id="delete-from-review" class="ml-20" href="#">Remover artigos selecionados da revisão</a></th>
       <th>Titulo</th>
       <th>Base</th>
       <th>Fichamento</th>
@@ -32,7 +28,13 @@
     {% for  obj in lista %}
       <tr>
         <td><input type="checkbox" class="doc-selected" id="{{ obj.id }}" /></td>
-        <td> <a href="{% url 'main:VisualizarDocumento' revisao.id obj.id %}"> {{ obj.titulo }} </a></td>
+        <td>
+            {% for tag in obj.tags.all %}
+
+            {% endfor %}
+
+            <a href="{% url 'main:VisualizarDocumento' revisao.id obj.id %}"> {{ obj.titulo }} </a>
+        </td>
         <td> {{ obj.bases_string }} </td>
         <td> 
           {% if revisao.id in obj.lista_fichamentos_revisoes %}

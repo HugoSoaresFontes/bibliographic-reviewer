@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.views.generic import FormView, RedirectView
+from django.views.generic.edit import CreateView
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import login, logout
 from django.utils.http import is_safe_url
@@ -51,6 +52,13 @@ class CadastroUsuarioView(BaseFormView):
     subtitulo_pagina = 'Cadastrar'
     model = Usuario
     form_class = UsuarioForm
+
+
+class AutoCadastroUsuarioView(CreateView):
+    template_name = 'contas/registrar-se.html'
+    model = Usuario
+    form_class = UsuarioForm
+    success_url = '/'
 
 
 class EdicaoUsuarioView(CadastroUsuarioView, BaseUpdateView):
