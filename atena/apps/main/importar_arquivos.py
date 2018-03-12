@@ -72,16 +72,12 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
                                               start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
             doc.update({
-                'cadastrado_por': cadastrante.id,
+                'revisao': revisao,
+                'cadastrado_por': cadastrante,
+                'base': base_artigos
             })
             serializer = NCBISerializer(data=doc)
-
-            if serializer.is_valid():
-                novo_documento = serializer.save()
-                novo_documento.bases.add(base_artigos)
-                novo_documento.revisoes.add(revisao)
-            else:
-                print(doc['titulo'])
+            serializer.save(doc)
 
     if base == "PMC":
         base_artigos = Base.objects.get(id=Base.PMC)
@@ -90,14 +86,9 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
                                            start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
         for doc in documentos:
             doc.update({
-                'cadastrado_por': cadastrante.id,
+                'revisao': revisao,
+                'cadastrado_por': cadastrante,
+                'base': base_artigos
             })
             serializer = NCBISerializer(data=doc)
-
-            if serializer.is_valid():
-                novo_documento = serializer.save()
-                novo_documento.bases.add(base_artigos)
-                novo_documento.revisoes.add(revisao)
-            else:
-                print('invalido:    ',doc['titulo'])
-                print(serializer.errors)
+            serializer.save(doc)
