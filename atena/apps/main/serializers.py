@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from bs4 import BeautifulSoup as bsoup
 from datetime import datetime
+from functools import reduce
 
 from contas.models import Usuario
 from .models import Documento
@@ -62,6 +63,42 @@ class DocumentoElsevierSerializer(serializers.ModelSerializer):
                 doi=data.get('prism:doi'),
                 html_url=data.get('prism:url'),
                 revista=data.get('prism:publicationName')
+            )
+            doc.save()
+            doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
+
+            return doc
+
+
+class DocumentoSpringerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Documento
+        fields = ['titulo', 'cadastrado_por']
+
+    def save(self, data):
+        if not 'doi' in data.keys():
+            data['doi'] = None
+
+        url = [x['value'] for x in data.get('url') if x['format'] == 'html'][0]
+
+        if not Documento.objects.filter(titulo=data.get('title'), doi=data.get('doi')):
+            l = lambda x, y: f'{x}; {y["creator"]}'
+            lista = data.get('creators')
+            try:
+                autores = reduce(l, lista[1:], lista[0]['creator'])
+            except:
+                autores = None
+
+            doc = Documento(
+                autores=autores,
+                titulo=data['title'],
+                doi=data['doi'],
+                revista=data['publicationName'],
+                html_url=url,
+                data=datetime.strptime(data['publicationDate'], '%Y-%m-%d'),
+                resumo=data['abstract']
             )
             doc.save()
             doc.revisoes.add(data['revisao'])

@@ -7,6 +7,8 @@ from urllib.parse import urlencode, quote_plus
 from datetime import datetime
 from bs4 import BeautifulSoup as bsoup
 from functools import reduce
+import re
+
 
 class IEEE_Xplore_Searcher():
     apikey = '8m22c725rj99bvxq6pftexqk'
@@ -496,3 +498,101 @@ class PubMed_Searcher(NCBI_Searcher):
             append(documento)
 
         return documentos
+
+
+class Springer_Searcher():
+    api_key = 'f1333dfd6f52767d0a77099010fbefbc'
+    address = 'http://api.springer.com/meta/v1/json?'
+
+    def __init__(self, queryterms: list = None, api_key: str = None, address: str = None):
+        self.articles_found = []
+        if queryterms:
+            self.queryterms = queryterms
+        if api_key:
+            self.api_key = api_key
+        if address:
+            self.address = address
+
+    def search(self, queryterms: list = None, max_records: int = 100, start_record: int = 1, year: int = None):
+
+        """
+        @param queryterms: list of lists. Terms within the same list are
+            separated by an OR. Lists are separated by an AND
+        @param max_records: Number of results to return in this request.
+        @param start_record: Return results starting at the number specified.
+        @param year: limit to articles/chapters published from a particular year to actual year.
+                     If left blank will serach all year
+        """
+
+        if not queryterms:
+            queryterms = self.queryterms
+
+        formated_query = " AND ".join(["(%s)" % " OR ".join(term) for term in queryterms])
+
+        url = self.address + "q=" + formated_query
+
+        if year:
+            url += ' year:' + str(year)
+            if max_records:
+                url += '&p=' + str(max_records)
+            if start_record:
+                url += '&s=' + str(start_record)
+
+            url += '&api_key=' + self.api_key
+
+            r = requests.get(url)
+
+            lst = re.findall("'\S+'", str(r.json().get('result')))
+            index_of_total = lst.index("'total'")
+
+            while (year <= datetime.today().year):
+                r = requests.get(url)
+
+                lst = re.findall("'\S+'", str(r.json().get('result')))
+                index_of_total = lst.index("'total'")
+                total_records = int(lst[index_of_total + 1][1:-1])
+
+                print("Requisition: ")
+                print("\n", r.url, "\n")
+                print("Articles found in ", year, ": ", total_records)
+                print(round((total_records / max_records) + 0.4999), " requests needed...")
+                self.articles_found += r.json().get('records')
+                print(year, " request completed...")
+                while ((start_record + max_records) < total_records):
+                    url = url.replace('&s=' + str(start_record),
+                                      '&s=' + str(start_record + max_records))
+                    r = requests.get(url)
+                    self.articles_found += r.json().get('records')
+                    start_record += max_records
+                url = url.replace('year:' + str(year), 'year:' + str(year + 1))
+                year += 1
+
+            return self.articles_found
+
+        if max_records:
+            url += '&p=' + str(max_records)
+        if start_record:
+            url += '&s=' + str(start_record)
+
+        url += '&api_key=' + self.api_key
+
+        r = requests.get(url)
+
+        lst = re.findall("'\S+'", str(r.json().get('result')))
+        index_of_total = lst.index("'total'")
+        total_records = int(lst[index_of_total + 1][1:-1])
+
+        print("Requisição: ")
+        print("\n", r.url, "\n")
+        print(round((total_records / max_records) + 0.4999), " requests needed...")
+        self.articles_found = r.json().get('records')
+        print("a request completed...")
+        while (start_record + max_records) < total_records:
+            url = url.replace('&s=' + str(start_record),
+                              '&s=' + str(start_record + max_records))
+            r = requests.get(url)
+            self.articles_found += r.json().get('records')
+            start_record += max_records
+            print("a request completed...")
+
+        return self.articles_found
