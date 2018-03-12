@@ -11,7 +11,7 @@ from reversion.views import RevisionMixin
 
 from .models import Revisao, Documento, Fichamento, Tag
 from .importar_arquivos import importar_arquivos
-from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm, TagForm
+from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm, TagForm, DocumentoForm
 import scholarly
 import json
 from datetime import datetime
@@ -68,7 +68,7 @@ class ListaRevisoesView(GroupRequiredMixin, BaseListView):
         return Revisao.objects.filter(usuarios=self.request.user)
 
 
-class CadastroRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
+class CadastroDocumentoRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Documento"
     model = Documento
     form_class = DocumentoForm
@@ -77,10 +77,14 @@ class CadastroRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
         return reverse('main:ListaDocumentosRevisao', kwargs={'pk': self.kwargs['revisao_pk']})
 
     def get_form_kwargs(self):
-        kwargs = super(CadastroRevisaoView, self).get_form_kwargs()
+        kwargs = super(CadastroDocumentoRevisaoView, self).get_form_kwargs()
         kwargs['revisao'] = get_object_or_404(Revisao, id=self.kwargs['revisao_pk'])
 
         return kwargs
+
+    def form_invalid(self, form):
+        print(form.errors)
+        super(CadastroDocumentoRevisaoView, self).form_invalid(form)
 
 class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     template_name = 'main/listas/artigos_revisao.html'
