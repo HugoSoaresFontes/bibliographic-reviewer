@@ -258,8 +258,7 @@ span.select2-selection.select2-selection--multiple{
     height: 8px;
     line-height: 100px;
     margin: 0 3px 3px 0;
-    max-width: 42px;
-    min-width: 42px;
+    min-width: 70px;
     padding: 0;
     text-shadow: none;
     width: auto;
@@ -267,7 +266,6 @@ span.select2-selection.select2-selection--multiple{
     color: #fff;
     display: block;
     margin-right: 3px;
-    max-width: 100%;
     overflow: hidden;
     padding: 3px 6px;
     position: relative;
