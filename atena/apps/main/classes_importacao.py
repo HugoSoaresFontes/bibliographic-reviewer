@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
-from urllib.parse import urlencode
+from .utils import ThreadWithReturnValue
 import requests
 from elsapy.elsclient import ElsClient
 from urllib.parse import urlencode, quote_plus
@@ -404,6 +404,29 @@ class PMC_Searcher(NCBI_Searcher):
         return 'https://www.ncbi.nlm.nih.gov/pmc/articles/'
 
     @staticmethod
+    def _get_data(p_art):
+        """Vasculha o XML (um <PubmedArticle>) para encontrar a data de publicação
+        Se for encontrada uma data válida, retorna um datetime.
+        Se não, retorna uma string, que espera-se que contenha uma informação de data"""
+
+        try:
+            pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
+        except:
+            pub_date = p_art.findAll("pub-date", {"pub-type": "ppub"})[0]
+
+        data_pub_string = "%s %s" % (pub_date.year.text, NCBI_Searcher.deepgetter(pub_date, 'month.text', default='Jan'))
+
+        try:
+            data = datetime.strptime(data_pub_string, "%Y %m").date()
+        except:
+            try:
+                data = datetime.strptime(data_pub_string, "%Y %b").date()
+            except:
+                data = data_pub_string
+
+        return data
+
+    @staticmethod
     def _get_unique_id(p_art):
         """Vascula o XML (um <PubmedArticle>) para encontrar o ID único do artigo.
         Se nao tiver DOI presente no XML, coloca o ID que tiver (esperado que seja o PubMed ID)"""
@@ -450,17 +473,11 @@ class PMC_Searcher(NCBI_Searcher):
             documento['palavras_chaves'] = ",".join(keywords)
             documento['titulo'] = getattr(p_art, "article-title").text
 
-            try:
-                pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
-            except:
-                pub_date = p_art.findAll("pub-date", {"pub-type": "ppub"})[0]
-
-            data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
-
-            try:
-                documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
-            except:
-                documento['data'] = datetime.strptime(data_pub_string, "%Y %b").date()
+            data = self._get_data(p_art)
+            if type(data) == str:
+                documento['resumo'] = "%s\n%s" % (data, documento['resumo'])
+            else:
+                documento['data'] = self._get_data(p_art)
 
             append(documento)
 
@@ -498,11 +515,11 @@ class PubMed_Searcher(NCBI_Searcher):
             ano = p_art.PubDate.MedlineDate.text[:8]
 
         try:
-            data_pub_string = "%s %s" % (ano, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
+            data_pub_string = "%s %s" % (ano, NCBI_Searcher.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
             data = datetime.strptime(data_pub_string, "%Y %b").date()
         except:
             try:
-                data_pub_string = "%s %s" % (ano, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
+                data_pub_string = "%s %s" % (ano, NCBI_Searcher.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
                 data = datetime.strptime(data_pub_string, "%Y %m").date()
             except:
                 data = str(p_art.PubDate.text)
