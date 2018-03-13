@@ -11,7 +11,7 @@ from reversion.views import RevisionMixin
 
 from .models import Revisao, Documento, Fichamento, Tag
 from .importar_arquivos import importar_arquivos
-from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm, TagForm
+from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm, TagForm, DocumentoForm
 import scholarly
 import json
 from datetime import datetime
@@ -51,8 +51,8 @@ class CadastroRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     model = Revisao
     form_class = RevisaoForm
 
-    def form_invalid(self, form):
-        print(form.errors)
+    def get_success_url(self):
+        return reverse('main:ListaRevisoes')
 
 
 class EdicaoRevisaoView(CadastroRevisaoView,RevisionMixin, BaseUpdateView):
@@ -63,18 +63,37 @@ class ListaRevisoesView(GroupRequiredMixin, BaseListView):
     template_name = 'main/listas/revisoes.html'
     titulo_pagina = "Revisões"
     model = Revisao
-    queryset = Revisao.objects.filter()
+
+    def get_queryset(self):
+        return Revisao.objects.filter(usuarios=self.request.user)
+
+
+class CadastroDocumentoRevisaoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
+    titulo_pagina = "Documento"
+    model = Documento
+    form_class = DocumentoForm
+
+    def get_success_url(self):
+        return reverse('main:ListaDocumentosRevisao', kwargs={'pk': self.kwargs['revisao_pk']})
+
+    def get_form_kwargs(self):
+        kwargs = super(CadastroDocumentoRevisaoView, self).get_form_kwargs()
+        kwargs['revisao'] = get_object_or_404(Revisao, id=self.kwargs['revisao_pk'])
+
+        return kwargs
 
 
 class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     template_name = 'main/listas/artigos_revisao.html'
     titulo_pagina = "Documentos"
     model = Documento
-    queryset = Documento.objects.filter()
 
     def get_queryset(self):
-        self.queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
-        return self.queryset
+        queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
+        if self.request.GET.get('tag'):
+            tags = self.request.GET.get('tag').split(',')
+            queryset = queryset.filter(fichamentos__tags__id__in=tags)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
@@ -149,6 +168,22 @@ class RemoverDocumentoRevisaoView(RevisionMixin, View):
         return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
 
+class AssociarTagView(RevisionMixin, View):
+    def post(self, request, *args, **kwargs):
+        revisao = get_object_or_404(Revisao, id=self.kwargs['revisao_pk'])
+        docs_ids = request.POST.getlist('docs[]')
+        tag = get_object_or_404(Tag, id=request.POST.get('id'))
+        docs = Documento.objects.filter(id__in=docs_ids)
+        for doc in docs:
+            fichamento, exists = Fichamento.objects.get_or_create(documento=doc, revisao=revisao)
+            if fichamento.tags.filter(pk=tag.id).exists():
+                fichamento.tags.remove(tag)
+            else:
+                fichamento.tags.add(tag)
+
+        return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
+
+
 class CadastroFichamentoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Fichamento"
     model = Fichamento
@@ -187,3 +222,19 @@ class CadastroTagView(RevisionMixin, GroupRequiredMixin, BaseFormView):
                                          'cor': self.object.cor,
                                          'id': self.object.id,
                                          }})
+
+
+def handler400(request):
+    return render(request, 'main/erros/400.html')
+
+
+def handler404(request):
+    return render(request, 'main/erros/404.html')
+
+
+def handler403(request):
+    return render(request, 'main/erros/403.html')
+
+
+def handler500(request):
+    return render(request, 'main/erros/500.html')

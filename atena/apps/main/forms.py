@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django import forms
 
-from .helpers import RevisaoHelper, FichamentoHelper, SelecionarBaseHelper
+from .helpers import RevisaoHelper, FichamentoHelper, SelecionarBaseHelper, DocumentoHelper
 from .models import Revisao, Documento, Fichamento, Tag
 from base.forms import BaseForm
 
@@ -25,12 +25,36 @@ class RevisaoForm(BaseForm):
             revisao.save()
             self.save_m2m()
 
+            if self.usuario not in revisao.usuarios.all():
+                revisao.usuarios.add(self.usuario)
 
         return revisao
 
 
+class DocumentoForm(BaseForm):
+    class Meta:
+        model = Documento
+        exclude = ['revisao']
+
+    def __init__(self, *args, **kwargs):
+        self.revisao = kwargs.pop('revisao')
+        super(DocumentoForm, self).__init__(*args, **kwargs)
+        self.helper = DocumentoHelper()
+
+    def save(self, commit=True):
+        documento = super(DocumentoForm, self).save(commit=False)
+        
+
+        if commit:
+            documento.save()
+            self.save_m2m()
+            if self.revisao: 
+                self.revisao.documentos.add(documento)
+
+        return documento
+
+
 class FichamentoForm(BaseForm):
-    
 
     class Meta:
         model = Fichamento
@@ -40,7 +64,10 @@ class FichamentoForm(BaseForm):
         self.revisao = kwargs.pop('revisao')
         self.documento = kwargs.pop('documento')
         super(FichamentoForm, self).__init__(*args, **kwargs)
+        self.fields['tags'].queryset = Tag.objects.filter(revisao=self.revisao)
+        self.fields['tags'].required = False
         self.helper = FichamentoHelper()
+
 
     def save(self, commit=True):
         fichamento = super(FichamentoForm, self).save(commit=False)
@@ -49,6 +76,7 @@ class FichamentoForm(BaseForm):
         
         if commit:
             fichamento.save()
+            self.save_m2m()
 
 
         return fichamento

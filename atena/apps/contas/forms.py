@@ -39,10 +39,9 @@ class UsuarioForm(forms.ModelForm):
 
     class Meta:
         model = Usuario
-        exclude = ['password', 'ativo', 'cpf', 'admin', 'superusuario', 'last_login']
+        exclude = ['password', 'ativo', 'admin', 'superusuario', 'last_login']
 
     def __init__(self, *args, **kwargs):
-        self.usuario = kwargs.pop('usuario')
         super(UsuarioForm, self).__init__(*args, **kwargs)
         self.helper = UsuarioHelper()
         if self.instance.pk:

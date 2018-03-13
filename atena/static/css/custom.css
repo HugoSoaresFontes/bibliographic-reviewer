@@ -249,3 +249,27 @@ span.select2-selection.select2-selection--multiple{
 .modal-title {
     display: inline-block;
 }
+
+
+.tag{
+        float: left;
+    font-size: 12px;
+    font-weight: 600;
+    height: 8px;
+    line-height: 100px;
+    margin: 0 3px 3px 0;
+    min-width: 70px;
+    padding: 0;
+    text-shadow: none;
+    width: auto;
+    border-radius: 3px;
+    color: #fff;
+    display: block;
+    margin-right: 3px;
+    overflow: hidden;
+    padding: 3px 6px;
+    position: relative;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    -webkit-font-smoothing: antialiased;
+}

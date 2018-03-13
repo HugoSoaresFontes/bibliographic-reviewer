@@ -22,6 +22,7 @@
         <span class="glyphicon glyphicon-lock form-control-feedback"></span>
         {{ form.senha.errors }}
       </div>
+
       <div class="row">
 
         <!-- /.col -->
@@ -29,6 +30,11 @@
           <button type="submit" class="btn btn-primary btn-block btn-flat pull-right">Entrar</button>
         </div>
         <!-- /.col -->
+      </div>
+      <div class="row mt-20">
+          <div class="col-md-12">
+              <a href="{% url 'contas:autocadastro' %}">Registrar-se</a>
+           </div>
       </div>
     </form>
 

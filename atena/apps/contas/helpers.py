@@ -13,6 +13,10 @@ class UsuarioHelper(FormHelper):
                 css_class='form-group col-md-6'
             ),
             Div(
+                Field('cpf', css_class="form-control"),
+                css_class='form-group col-md-6'
+            ),
+            Div(
                 Field('email', css_class="form-control"),
                 css_class='form-group col-md-6'
             ),
@@ -29,7 +33,7 @@ class UsuarioHelper(FormHelper):
                 css_class='form-group col-md-12'
             ),
             Div(
-                Submit('submit', 'Confirmar', css_class="btn pull-right"),
+                Submit('submit', 'Registrar-se', css_class="btn pull-right"),
                 css_class='form-group col-md-12'
             ),
         )

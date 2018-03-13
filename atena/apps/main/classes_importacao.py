@@ -7,6 +7,8 @@ from urllib.parse import urlencode, quote_plus
 from datetime import datetime
 from bs4 import BeautifulSoup as bsoup
 from functools import reduce
+import re
+
 
 class IEEE_Xplore_Searcher():
     apikey = '8m22c725rj99bvxq6pftexqk'
@@ -288,10 +290,12 @@ class NCBI_Searcher(metaclass=ABCMeta):
                          "db": self._db, "sort": self._sort_order}
         payload = {"term": term,
                    "retmax": max_records, "retstart": start_record,
-                   "mindate": start_year, "maxdate": end_year or datetime.now().year}
+                   "mindate": start_year or '', "maxdate": end_year or datetime.now().year}
         payload.update(fixed_payload)
 
         url = "%s?%s" % (self.search_url, urlencode(payload))
+
+        print("URL SEARCH: %s" % url)
 
         print("Você pode realizar essa mesma busca no navegador com o termo de busca:\n%s" % term)
 
@@ -401,11 +405,25 @@ class PMC_Searcher(NCBI_Searcher):
     def _article_url(self):
         return 'https://www.ncbi.nlm.nih.gov/pmc/articles/'
 
+    @staticmethod
+    def _get_unique_id(p_art):
+        """Vascula o XML (um <PubmedArticle>) para encontrar o ID único do artigo.
+        Se nao tiver DOI presente no XML, coloca o ID que tiver (esperado que seja o PubMed ID)"""
+
+        try:
+            unique_id = p_art.findAll("article-id", {"pub-id-type": "doi"})[0].text
+        except:
+            unique_id = p_art.findAll("article-id")[0]
+            unique_id = "%s%s" % (unique_id['pub-id-type'], unique_id.text)
+
+        return unique_id
+
     def _get_article_metadata(self, *args):
         id_list = ','.join([str(x) for x in args])
 
         payload = {"id": id_list, "db": self._db, "retmode": "xml"}
         url = "%s?%s" % (self.fetch_url, urlencode(payload))
+        print("URL META: %s" % url)
 
         soup = bsoup(requests.get(url).content, "xml")
 
@@ -430,7 +448,7 @@ class PMC_Searcher(NCBI_Searcher):
             documento['resumo'] = getattr(p_art.abstract, 'text', ' - ')
             documento['html_url'] = "%s%s" % (self._article_url, pmc_id)
             documento['autores'] = ",".join(authors)
-            documento['doi'] = p_art.findAll("article-id", {"pub-id-type": "doi"})[0].text
+            documento['doi'] = self._get_unique_id(p_art)
             documento['palavras_chaves'] = ",".join(keywords)
             documento['titulo'] = getattr(p_art, "article-title").text
 
@@ -440,7 +458,11 @@ class PMC_Searcher(NCBI_Searcher):
                 pub_date = p_art.findAll("pub-date", {"pub-type": "ppub"})[0]
 
             data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
-            documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
+
+            try:
+                documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
+            except:
+                documento['data'] = datetime.strptime(data_pub_string, "%Y %b").date()
 
             append(documento)
 
@@ -466,11 +488,49 @@ class PubMed_Searcher(NCBI_Searcher):
     def _article_url(self):
         return "https://www.ncbi.nlm.nih.gov/pubmed/"
 
+    @staticmethod
+    def _get_data(p_art):
+        """Vasculha o XML (um <PubmedArticle>) para encontrar a data de publicação
+        Se for encontrada uma data válida, retorna um datetime.
+        Se não, retorna uma string, que espera-se que contenha uma informação de data"""
+
+        if hasattr(p_art.PubDate.Year, "text"):
+            ano = p_art.PubDate.Year.text
+        elif hasattr(p_art.PubDate.MedlineDate, "text"):
+            ano = p_art.PubDate.MedlineDate.text[:8]
+
+        try:
+            data_pub_string = "%s %s" % (ano, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
+            data = datetime.strptime(data_pub_string, "%Y %b").date()
+        except:
+            try:
+                data_pub_string = "%s %s" % (ano, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
+                data = datetime.strptime(data_pub_string, "%Y %m").date()
+            except:
+                data = str(p_art.PubDate.text)
+
+        return data
+
+    @staticmethod
+    def _get_unique_id(p_art):
+        """Vascula o XML (um <PubmedArticle>) para encontrar o ID único do artigo.
+        Se nao tiver DOI presente no XML, coloca o ID que tiver (esperado que seja o PubMed ID)"""
+
+        try:
+            unique_id = p_art.findAll("ArticleId", {"IdType": "doi"})[0].text
+        except:
+            unique_id = p_art.findAll("ArticleId")[0]
+            unique_id = "%s%s" % (unique_id['IdType'], unique_id.text)
+
+        return unique_id
+
     def _get_article_metadata(self, *args):
         id_list = ','.join([str(x) for x in args])
 
         payload = {"id": id_list, "db": self._db, "retmode": "xml"}
         url = "%s?%s" % (self.fetch_url, urlencode(payload))
+
+        print("URL META: %s" % url)
 
         soup = bsoup(requests.get(url).content, "xml")
 
@@ -482,17 +542,124 @@ class PubMed_Searcher(NCBI_Searcher):
         for p_art in pubmed_articles:
             authors = ["%s %s" % (a.ForeName.text, a.LastName.text) for a in p_art.findAll("Author")]
             keywords = [k.text for k in p_art.findAll("Keyword")]
-            data_pub_string = "%s %s" % (
-            p_art.PubDate.Year.text, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
 
             documento = {}
             documento['resumo'] = getattr(p_art.AbstractText, 'text', ' - ')
             documento['html_url'] = "%s%s" % (self._article_url, p_art.PMID.text)
             documento['autores'] = ",".join(authors)
-            documento['doi'] = p_art.findAll("ArticleId", {"IdType": "doi"})[0].text
+            documento['doi'] = self._get_unique_id(p_art)
             documento['palavras_chaves'] = ",".join(keywords)
-            documento['data'] = datetime.strptime(data_pub_string, "%Y %b").date()
             documento['titulo'] = p_art.ArticleTitle.text
+            data = self._get_data(p_art)
+            if type(data) == str:
+                documento['resumo'] = "%s\n%s" % (data, documento['resumo'])
+            else:
+                documento['data'] = self._get_data(p_art)
+
             append(documento)
 
         return documentos
+
+
+class Springer_Searcher():
+    api_key = 'f1333dfd6f52767d0a77099010fbefbc'
+    address = 'http://api.springer.com/meta/v1/json?'
+
+    def __init__(self, queryterms: list = None, api_key: str = None, address: str = None):
+        self.articles_found = []
+        if queryterms:
+            self.queryterms = queryterms
+        if api_key:
+            self.api_key = api_key
+        if address:
+            self.address = address
+
+    def search(self, queryterms: list = None, max_records: int = 2500, start_record: int = 1, year: int = None, end_year: int = None):
+        """
+        @param queryterms: list of lists. Terms within the same list are
+            separated by an OR. Lists are separated by an AND
+        @param max_records: Number of results to return in this request.
+        @param start_record: Return results starting at the number specified.
+        @param year: limit to articles/chapters published from a particular year.
+                     If left blank will serach all year
+        @param end_year: limit to articles/chapters published from a @year to actual @end_year.
+                     If left blank will serach all year
+        """
+
+        if not queryterms:
+            queryterms = self.queryterms
+
+        formated_query = " AND ".join(["(%s)" % " OR ".join(term) for term in queryterms])
+
+        url = self.address + "q=" + formated_query
+
+        if year:
+            url += ' year:' + str(year)
+            if max_records:
+                url += '&p=' + str(max_records)
+            if start_record:
+                url += '&s=' + str(start_record)
+
+            url += '&api_key=' + self.api_key
+
+            r = requests.get(url)
+
+            lst = re.findall("'\S+'", str(r.json().get('result')))
+            index_of_total = lst.index("'total'")
+
+            if end_year and end_year > year:
+                last_year = end_year
+            else:
+                last_year = year
+
+            while year <= last_year:
+                r = requests.get(url)
+
+                lst = re.findall("'\S+'", str(r.json().get('result')))
+                index_of_total = lst.index("'total'")
+                total_records = int(lst[index_of_total + 1][1:-1])
+
+                print("Requisition: ")
+                print("\n", r.url, "\n")
+                print("Articles found in ", year, ": ", total_records)
+                print(round((total_records / max_records) + 0.4999), " requests needed...")
+                self.articles_found += r.json().get('records')
+                print(year, " request completed...")
+                while (start_record + max_records) < total_records:
+                    url = url.replace('&s=' + str(start_record),
+                                      '&s=' + str(start_record + max_records))
+                    r = requests.get(url)
+                    self.articles_found += r.json().get('records')
+                    start_record += max_records
+                url = url.replace('year:' + str(year), 'year:' + str(year + 1))
+                year += 1
+
+            return self.articles_found
+
+        if max_records:
+            url += '&p=' + str(max_records)
+        if start_record:
+            url += '&s=' + str(start_record)
+
+        url += '&api_key=' + self.api_key
+
+        r = requests.get(url)
+
+        lst = re.findall("'\S+'", str(r.json().get('result')))
+        index_of_total = lst.index("'total'")
+        total_records = int(lst[index_of_total + 1][1:-1])
+
+        print("Requisição: ")
+        print("\n", r.url, "\n")
+        print(round((total_records / max_records) + 0.4999), " requests needed...")
+        self.articles_found = r.json().get('records')
+        print("a request completed...")
+        while (start_record + max_records) < total_records:
+            url = url.replace('&s=' + str(start_record),
+                              '&s=' + str(start_record + max_records))
+            r = requests.get(url)
+            self.articles_found += r.json().get('records')
+            start_record += max_records
+            print("a request completed...")
+
+        return self.articles_found

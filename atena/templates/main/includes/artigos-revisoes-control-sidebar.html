@@ -116,7 +116,15 @@
     <div id="control-sidebar-theme-demo-options-tab" class="tab-pane active">
         <div>
             <div class="input-group-btn">
-              <a class="btn btn-default" style="width: 200px;" href="{% url 'main:ImportarDocumentos' revisao.id %}">Importar Artigos</a>
+              <a class="btn btn-default" style="width: 200px;" href="{% url 'main:CadastroDocumentoRevisao' revisao.id %}">
+                Add um artigo
+              </a>
+            </div> 
+            <br>           
+            <div class="input-group-btn">
+              <a class="btn btn-default" style="width: 200px;" href="{% url 'main:ImportarDocumentos' revisao.id %}">   
+                Importar Artigos das Bases
+              </a>
             </div>
             <br>
             <div class="input-group-btn">
@@ -140,7 +148,7 @@
         <div id="lista_tags">
             <h4 class="control-sidebar-heading">Tags</h4>
             {% for tag in lista_tags%}
-            <button class="btn mb-10" style="background-color: {{tag.cor}}; width:200px;"> {{tag.nome}} </button>
+            <button data-id="{{tag.id}}" class="btn mb-10 btntag" style="background-color: {{tag.cor}}; width:200px;"> {{tag.nome}} </button>
 
             {% endfor %}
         </div>
@@ -167,7 +175,7 @@
                     console.log('uc', data, textStatus, jqXHR);
                     estilo = "width:200px; background-color:" + data.tag.cor;
 
-                    button = $('<button class="btn mb-10" style='+estilo+'>'+data.tag.nome+'</button>');
+                    button = $('<button data-id='+data.tag.id+' class="btn mb-10 btntag" style='+estilo+'>'+data.tag.nome+'</button>');
                     $('#lista_tags').append(button);
                 },
                 error: function(data, textStatus, jqXHR) {
@@ -183,6 +191,32 @@
                 }
             });
     });
+
+        $(document).on("click", ".btntag", function(e) {
+            id = $(this).attr('data-id');
+
+            var idSelector = function () {
+                return parseInt(this.id);
+            };
+            docIds = $(".doc-selected:checked").map(idSelector).get();
+            var idObj = function (v) {
+                return {name: 'docs[]', value: v};
+            };
+
+            if (docIds.length > 0) {
+                if (confirm('Associar/desassociar os fichamentos selecionados com a tag "'+$(this).text()+'"?')) {
+                    docIds = docIds.map(idObj);
+                    docIds.push({name: 'csrfmiddlewaretoken', value: jQuery("[name=csrfmiddlewaretoken]").val()});
+                    docIds.push({name: 'id', value: id});
+                    submit("{% url 'main:AssociarTag' revisao.id %}?", 'POST', docIds);
+                }
+            } else {
+                params = [{name: 'tag', value: id}];
+                submit("{% url 'main:ListaDocumentosRevisao' revisao.id %}?", 'GET', params);
+            }
+
+        });
+
 
     //Colorpicker
     $('.my-colorpicker1').colorpicker()
