@@ -165,6 +165,22 @@ class RemoverDocumentoRevisaoView(RevisionMixin, View):
         return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
 
+class AssociarTagView(RevisionMixin, View):
+    def post(self, request, *args, **kwargs):
+        revisao = get_object_or_404(Revisao, id=self.kwargs['revisao_pk'])
+        docs_ids = request.POST.getlist('docs[]')
+        tag = get_object_or_404(Tag, id=request.POST.get('id'))
+        docs = Documento.objects.filter(id__in=docs_ids)
+        for doc in docs:
+            fichamento, exists = Fichamento.objects.get_or_create(documento=doc, revisao=revisao)
+            if fichamento.tags.filter(pk=tag.id).exists():
+                fichamento.tags.remove(tag)
+            else:
+                fichamento.tags.add(tag)
+
+        return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
+
+
 class CadastroFichamentoView(RevisionMixin, GroupRequiredMixin, BaseFormView):
     titulo_pagina = "Fichamento"
     model = Fichamento
@@ -207,6 +223,7 @@ class CadastroTagView(RevisionMixin, GroupRequiredMixin, BaseFormView):
 
 def handler400(request):
     return render(request, 'main/erros/400.html')
+
 
 def handler404(request):
     return render(request, 'main/erros/404.html')

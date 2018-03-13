@@ -148,7 +148,7 @@
         <div id="lista_tags">
             <h4 class="control-sidebar-heading">Tags</h4>
             {% for tag in lista_tags%}
-            <button class="btn mb-10" style="background-color: {{tag.cor}}; width:200px;"> {{tag.nome}} </button>
+            <button data-id="{{tag.id}}" class="btn mb-10 btntag" style="background-color: {{tag.cor}}; width:200px;"> {{tag.nome}} </button>
 
             {% endfor %}
         </div>
@@ -175,7 +175,7 @@
                     console.log('uc', data, textStatus, jqXHR);
                     estilo = "width:200px; background-color:" + data.tag.cor;
 
-                    button = $('<button class="btn mb-10" style='+estilo+'>'+data.tag.nome+'</button>');
+                    button = $('<button data-id='+data.tag.id+' class="btn mb-10 btntag" style='+estilo+'>'+data.tag.nome+'</button>');
                     $('#lista_tags').append(button);
                 },
                 error: function(data, textStatus, jqXHR) {
@@ -191,6 +191,24 @@
                 }
             });
     });
+
+        $(document).on("click", ".btntag", function(e) {
+            id = $(this).attr('data-id');
+
+            var idSelector = function () {
+                return parseInt(this.id);
+            };
+            docIds = $(".doc-selected:checked").map(idSelector).get();
+            var idObj = function (v) {
+                return {name: 'docs[]', value: v};
+            };
+            docIds = docIds.map(idObj);
+            docIds.push({name: 'csrfmiddlewaretoken', value: jQuery("[name=csrfmiddlewaretoken]").val()});
+            docIds.push({name: 'id', value: id});
+            submit("{% url 'main:AssociarTag' revisao.id %}?", 'POST', docIds);
+
+        });
+
 
     //Colorpicker
     $('.my-colorpicker1').colorpicker()

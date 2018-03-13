@@ -65,6 +65,7 @@ class FichamentoForm(BaseForm):
         self.documento = kwargs.pop('documento')
         super(FichamentoForm, self).__init__(*args, **kwargs)
         self.fields['tags'].queryset = Tag.objects.filter(revisao=self.revisao)
+        self.fields['tags'].required = False
         self.helper = FichamentoHelper()
 
 

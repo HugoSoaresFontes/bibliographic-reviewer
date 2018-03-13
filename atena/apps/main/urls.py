@@ -22,5 +22,6 @@ urlpatterns = [
         EdicaoFichamentoView.as_view(), name='EdicaoFichamento'),
 
     url(r'^revisao/(?P<revisao_pk>\d+)/documentos/tags/add/$', CadastroTagView.as_view(), name='CadastroTag'),
+    url(r'^revisao/(?P<revisao_pk>\d+)/documentos/tags/associar/$', AssociarTagView.as_view(), name='AssociarTag'),
 
 ]
