@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from .classes_importacao import IEEE_Xplore_Searcher, PubMed_Searcher, PMC_Searcher, ElsevierSearcher
-from .serializers import DocumentoSerializerIEEE, NCBISerializer, DocumentoElsevierSerializer
+from .classes_importacao import IEEE_Xplore_Searcher, PubMed_Searcher, PMC_Searcher, ElsevierSearcher, Springer_Searcher
+from .serializers import DocumentoSerializerIEEE, NCBISerializer, DocumentoElsevierSerializer, DocumentoSpringerSerializer
 from .models import Base
 
 technology_queryterms = [
@@ -46,7 +46,7 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
                 'cadastrado_por': cadastrante,
                 'base': base_artigos
             })
-            serializer = DocumentoElsevierSerializer(data=doc)
+            serializer = DocumentoElsevierSerializer(data=doc, base=Base.SCIENCE_DIRECT)
             serializer.save(doc)
 
     if base == "Scopus":
@@ -62,7 +62,7 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
                 'cadastrado_por': cadastrante,
                 'base': base_artigos
             })
-            serializer = DocumentoElsevierSerializer(data=doc)
+            serializer = DocumentoElsevierSerializer(data=doc, base=Base.SCOPUS)
             serializer.save(doc)
 
     if base == "PubMed":
@@ -91,4 +91,18 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
                 'base': base_artigos
             })
             serializer = NCBISerializer(data=doc)
+            serializer.save(doc)
+
+    if base == "Springer":
+        base_artigos = Base.objects.get(id=Base.SPRINGER)
+        springer_searcher = Springer_Searcher()
+        documentos = springer_searcher.search(queryterms=queryterms, year=kwargs.get('ano_inicio'),
+                                              end_year=kwargs.get('ano_fim'))
+        for doc in documentos:
+            doc.update({
+                'revisao': revisao,
+                'cadastrado_por': cadastrante,
+                'base': base_artigos
+            })
+            serializer = DocumentoSpringerSerializer(data=doc)
             serializer.save(doc)

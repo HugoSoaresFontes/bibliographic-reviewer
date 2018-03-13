@@ -574,14 +574,15 @@ class Springer_Searcher():
         if address:
             self.address = address
 
-    def search(self, queryterms: list = None, max_records: int = 100, start_record: int = 1, year: int = None):
-
+    def search(self, queryterms: list = None, max_records: int = 2500, start_record: int = 1, year: int = None, end_year: int = None):
         """
         @param queryterms: list of lists. Terms within the same list are
             separated by an OR. Lists are separated by an AND
         @param max_records: Number of results to return in this request.
         @param start_record: Return results starting at the number specified.
-        @param year: limit to articles/chapters published from a particular year to actual year.
+        @param year: limit to articles/chapters published from a particular year.
+                     If left blank will serach all year
+        @param end_year: limit to articles/chapters published from a @year to actual @end_year.
                      If left blank will serach all year
         """
 
@@ -606,7 +607,12 @@ class Springer_Searcher():
             lst = re.findall("'\S+'", str(r.json().get('result')))
             index_of_total = lst.index("'total'")
 
-            while (year <= datetime.today().year):
+            if end_year and end_year > year:
+                last_year = end_year
+            else:
+                last_year = year
+
+            while year <= last_year:
                 r = requests.get(url)
 
                 lst = re.findall("'\S+'", str(r.json().get('result')))
@@ -619,7 +625,7 @@ class Springer_Searcher():
                 print(round((total_records / max_records) + 0.4999), " requests needed...")
                 self.articles_found += r.json().get('records')
                 print(year, " request completed...")
-                while ((start_record + max_records) < total_records):
+                while (start_record + max_records) < total_records:
                     url = url.replace('&s=' + str(start_record),
                                       '&s=' + str(start_record + max_records))
                     r = requests.get(url)

@@ -4,7 +4,7 @@ from datetime import datetime
 from functools import reduce
 
 from contas.models import Usuario
-from .models import Documento
+from .models import Documento, Base
 
 
 class DocumentoSerializerIEEE(serializers.ModelSerializer):
@@ -46,6 +46,9 @@ class DocumentoSerializerIEEE(serializers.ModelSerializer):
 
 
 class DocumentoElsevierSerializer(serializers.ModelSerializer):
+    def __init__(self, base, **kwargs):
+        super().__init__(**kwargs)
+        self.base = base
 
     class Meta:
         model = Documento
@@ -57,11 +60,28 @@ class DocumentoElsevierSerializer(serializers.ModelSerializer):
         if not 'doi' in data.keys():
             data['doi'] = None
 
+        try:
+            if self.base == Base.SCIENCE_DIRECT:
+                authors = data['authors']['author']
+                authors = reduce((lambda x, y: f"{x}; {y['given-name']} {y['surname']}"), authors[1:],
+                                 f"{authors[0]['given-name']} {authors[0]['surname']}")
+            if self.base == Base.SCOPUS:
+                authors = data.get('dc:creator')
+        except:
+            authors = data.get('dc:creator')
+
+        if self.base == Base.SCIENCE_DIRECT:
+            date = datetime.strptime(data['prism:coverDate'][0]['$'], '%Y-%m-%d')
+        elif self.base == Base.SCOPUS:
+            date = datetime.strptime(data['prism:coverDate'], '%Y-%m-%d')
+
+
         if not Documento.objects.filter(titulo=data.get('dc:title'), doi=data.get('prism:doi')):
             doc = Documento(
                 titulo=data.get('dc:title'),
-                autores=data.get('dc:creator'),
+                autores=authors,
                 doi=data.get('prism:doi'),
+                data=date,
                 html_url=data.get('prism:url'),
                 revista=data.get('prism:publicationName')
             )
@@ -72,14 +92,14 @@ class DocumentoElsevierSerializer(serializers.ModelSerializer):
             return doc
 
         else:
-            doc = Documento.objects.get(titulo=data['title'], doi=data['doi'])
+            doc = Documento.objects.get(titulo=data.get('dc:title'), doi=data.get('prism:doi'))
             doc.revisoes.add(data['revisao'])
             doc.bases.add(data['base'])
 
             return doc
 
-class DocumentoSpringerSerializer(serializers.ModelSerializer):
 
+class DocumentoSpringerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Documento
         fields = ['titulo', 'cadastrado_por']
@@ -112,6 +132,11 @@ class DocumentoSpringerSerializer(serializers.ModelSerializer):
             doc.bases.add(data['base'])
 
             return doc
+
+        else:
+            doc = Documento.objects.get(titulo=data['title'], doi=data['doi'])
+            doc.revisoes.add(data['revisao'])
+            doc.bases.add(data['base'])
 
 
 class NCBISerializer(serializers.ModelSerializer):
