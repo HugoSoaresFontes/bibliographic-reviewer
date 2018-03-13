@@ -202,10 +202,18 @@
             var idObj = function (v) {
                 return {name: 'docs[]', value: v};
             };
-            docIds = docIds.map(idObj);
-            docIds.push({name: 'csrfmiddlewaretoken', value: jQuery("[name=csrfmiddlewaretoken]").val()});
-            docIds.push({name: 'id', value: id});
-            submit("{% url 'main:AssociarTag' revisao.id %}?", 'POST', docIds);
+
+            if (docIds.length > 0) {
+                if (confirm('Associar/desassociar os fichamentos selecionados com a tag "'+$(this).text()+'"?')) {
+                    docIds = docIds.map(idObj);
+                    docIds.push({name: 'csrfmiddlewaretoken', value: jQuery("[name=csrfmiddlewaretoken]").val()});
+                    docIds.push({name: 'id', value: id});
+                    submit("{% url 'main:AssociarTag' revisao.id %}?", 'POST', docIds);
+                }
+            } else {
+                params = [{name: 'tag', value: id}];
+                submit("{% url 'main:ListaDocumentosRevisao' revisao.id %}?", 'GET', params);
+            }
 
         });
 

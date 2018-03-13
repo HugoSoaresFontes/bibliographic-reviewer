@@ -89,8 +89,11 @@ class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     model = Documento
 
     def get_queryset(self):
-        self.queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
-        return self.queryset
+        queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
+        if self.request.GET.get('tag'):
+            tags = self.request.GET.get('tag').split(',')
+            queryset = queryset.filter(fichamentos__tags__id__in=tags)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
