@@ -15,6 +15,7 @@ from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm, TagForm, Doc
 import scholarly
 import json
 from datetime import datetime
+from django.db import transaction
 
 
 class IndexView(LoginRequiredMixin, BaseTemplateView):
@@ -110,12 +111,13 @@ class ClassificarDocumentosView(ListaDocumentosRevisaoView):
         for doc in docs:
             item = next(scholarly.search_pubs_query(doc.doi))
             if item:
-                try:
-                    doc.citado_papers_scholar = item.citedby
-                except:
-                    doc.citado_papers_scholar = -1
-                doc.citado_papers_scholar_data = datetime.utcnow()
-                doc.save()
+                with transaction.atomic():
+                    try:
+                        doc.citado_papers_scholar = item.citedby
+                    except:
+                        doc.citado_papers_scholar = -1
+                    doc.citado_papers_scholar_data = datetime.utcnow()
+                    doc.save()
 
         return HttpResponseRedirect(reverse('main:ListaDocumentosRevisao', kwargs={'pk': kwargs['pk']}))
 
