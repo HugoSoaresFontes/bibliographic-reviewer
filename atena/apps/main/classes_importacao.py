@@ -4,11 +4,13 @@ from urllib.parse import urlencode
 import requests
 from elsapy.elsclient import ElsClient
 from urllib.parse import urlencode, quote_plus
+from .utils import ThreadWithReturnValue
 from datetime import datetime
 from bs4 import BeautifulSoup as bsoup
 from functools import reduce
 import re
-
+import time
+import xmltodict, json
 
 class IEEE_Xplore_Searcher():
     apikey = '8m22c725rj99bvxq6pftexqk'
@@ -251,11 +253,14 @@ class NCBI_Searcher(metaclass=ABCMeta):
     search_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
     meta_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
     fetch_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
+    ncbi_register = {"tool": "Atena", "email": "ddddiegolima@gmail.com"}
+    max_pagination = 20
+    recursive = True
 
     def search(self, queryterms: list = None, search_type: str = None,
-               start_year: int = 1900, end_year: int = None,
-               max_records: int = 20, start_record: int = 0,
-               author: str = None, journal: str = None):
+               start_year: int = None, end_year: int = None,
+               max_records: int = None, start_record: int = None,
+               author: str = None, journal: str = None, search_url: str = None):
         """
         Realiza uma pesquisa NCBI.
         @param queryterms: list of lists. Terms within the same list are
@@ -272,6 +277,8 @@ class NCBI_Searcher(metaclass=ABCMeta):
         @param author: An author's name. Searches both first name and last name
             Accepts a list of author names too.
         @param journal: An author's name. Accepts a list of journals too.
+        @param search_url: Optionally you can directly specify the URL to
+            query from. Setting this parameter will ignore the other parameters.
         @return: a dictionaries list whose keys are compatible with Documento model.
         """
 
@@ -289,28 +296,73 @@ class NCBI_Searcher(metaclass=ABCMeta):
         fixed_payload = {"retmode": "json", "datetype": "pdat",
                          "db": self._db, "sort": self._sort_order}
         payload = {"term": term,
-                   "retmax": max_records, "retstart": start_record,
-                   "mindate": start_year or '', "maxdate": end_year or datetime.now().year}
+                   "retmax": max_records or '', "retstart": start_record or '',
+                   "mindate": start_year or '', "maxdate": end_year or ''}
         payload.update(fixed_payload)
+        payload.update(self.ncbi_register)
+        url = search_url if search_url else "%s?%s" % (self.search_url, urlencode(payload))
 
-        url = "%s?%s" % (self.search_url, urlencode(payload))
-
-        print("URL SEARCH: %s" % url)
-
-        print("Você pode realizar essa mesma busca no navegador com o termo de busca:\n%s" % term)
-
+        #         print("URL SEARCH: %s" % url)
+        t_00 = time.time()
         response = requests.get(url).json()['esearchresult']
+        print('{:15s}{:6.3f}'.format("response", time.time() - t_00))
+        quantidade_artigos = int(response['count'])
+        if self.recursive:
+            print("Artigos encontrados: ", quantidade_artigos)
+        # Se o usuário não limitou quantidade de resultados, então traz tudo
+        max_records = max_records or quantidade_artigos
 
-        print('QTD. resultados: %s' % response['count'])
+        retorno = []
+
+        ###
+        ### BLOCO FANTASMA
+        ###
+        # Se houver necessidade de paginação...
+        #         if quantidade_artigos > self.max_pagination and max_records > self.max_pagination:
+        #             # self.recursive só sera True se a chamada estiver sendo feita pelo usuário.
+        #             # Isso serve para garantir que cada chamada da função self.search
+        #             # neste bloco só acontecerá com um nível de recursividade.
+        #             if self.recursive:
+        #                 self.recursive = False
+
+        #                 threads = []
+        #                 payload.update({'retmax':self.max_pagination})
+        #                 for i,x in enumerate(range(20, quantidade_artigos+1, self.max_pagination)):
+
+        #                     payload.update({'retstart':x})
+        #                     kwargs = {"search_url": "%s?%s" % (self.search_url, urlencode(payload))}
+
+        #                     thread = ThreadWithReturnValue(target=self.search, kwargs=kwargs)
+        #                     threads.append(thread)
+        #                     thread.start()
+
+        #                     if (i+1)%3==0:
+        #                         print("sleeping")
+        #                         time.sleep(2)
+
+        #                 for thread in threads:
+        #                     lista = thread.join()
+        #                     print("thread fetching ",len(lista))
+        #                     retorno.extend(lista)
+
+        #                 self.recursive = True
+
+        ###
+        ### FIM BLOCO FANTASMA
+        ###
 
         id_list = response['idlist']
 
         if id_list:
-            return self._get_article_metadata(*id_list)
-        return []
+            lista = self._get_article_metadata(*id_list)
+            retorno.extend(lista)
+        return retorno
 
     def _search_term(self, queryterms: list, search_type: str = None):
         """Monta o termo de pesquisa completo para mandar para a API."""
+
+        if type(queryterms) != list:
+            return
 
         if search_type in ['querytext', None]:
             # Retorna simplesmente a busca concatenando com os OR's e AND's
@@ -406,6 +458,30 @@ class PMC_Searcher(NCBI_Searcher):
         return 'https://www.ncbi.nlm.nih.gov/pmc/articles/'
 
     @staticmethod
+    def _get_data(p_art):
+        """Vasculha o XML (um <PubmedArticle>) para encontrar a data de publicação
+        Se for encontrada uma data válida, retorna um datetime.
+        Se não, retorna uma string, que espera-se que contenha uma informação de data"""
+
+        try:
+            pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
+        except:
+            pub_date = p_art.findAll("pub-date", {"pub-type": "ppub"})[0]
+
+        data_pub_string = "%s %s" % (
+        pub_date.year.text, NCBI_Searcher.deepgetter(pub_date, 'month.text', default='Jan'))
+
+        try:
+            data = datetime.strptime(data_pub_string, "%Y %m").date()
+        except:
+            try:
+                data = datetime.strptime(data_pub_string, "%Y %b").date()
+            except:
+                data = data_pub_string
+
+        return data
+
+    @staticmethod
     def _get_unique_id(p_art):
         """Vascula o XML (um <PubmedArticle>) para encontrar o ID único do artigo.
         Se nao tiver DOI presente no XML, coloca o ID que tiver (esperado que seja o PubMed ID)"""
@@ -422,49 +498,118 @@ class PMC_Searcher(NCBI_Searcher):
         id_list = ','.join([str(x) for x in args])
 
         payload = {"id": id_list, "db": self._db, "retmode": "xml"}
+        payload.update(self.ncbi_register)
         url = "%s?%s" % (self.fetch_url, urlencode(payload))
         print("URL META: %s" % url)
 
-        soup = bsoup(requests.get(url).content, "xml")
+        t_05 = time.time()
+        r = requests.get(url)
+        print('{:15s}{:6.3f}'.format("response_M", time.time() - t_05))
 
-        pmc_articles = soup.findAll('article')
+        t_02 = time.time()
+        # Pegar o XML, e transformar num dicionário
+        d = json.loads(json.dumps(xmltodict.parse(r.content)))
+        articles = d['pmc-articleset']['article']
+        print('{:15s}{:6.3f}'.format("parse", time.time() - t_02))
 
         documentos = []
         append = documentos.append
 
-        for p_art in pmc_articles:
-            author_list = p_art.findAll("contrib", {"contrib-type": "author"})
-            authors = []
-            for author in author_list:
-                try:
-                    authors.append("%s %s" % (getattr(author, "given-names").text, author.surname.text))
-                except:
-                    authors.append(author.text)
+        t_04 = time.time()
+        debug = False
+        for article in articles:
+            ### TITULO
+            # try:
+            title = article['front']['article-meta']['title-group']['article-title']
+            # except Exception as e:
+            #     title = ''
+            #     print(e.__class__.__name__, e)
+            #     if debug:
+            #         ipdb.set_trace()
 
-            keywords = [k.text for k in p_art.findAll("kwd")]
-            pmc_id = soup.findAll("article-id", {"pub-id-type": 'pmc'})[0].text
+            ### AUTORES
+            try:
+                authors = []
+                for contrib in article['front']['article-meta']['contrib-group']['contrib']:
+                    try:
+                        authors.append("%s %s" % (contrib['name']['given-names'], contrib['name']['surname']))
+                    except:
+                        pass
+            except Exception as e:
+                authors = []
+                print(e.__class__.__name__, e)
+            #     if debug:
+            #         ipdb.set_trace()
+
+            ### PALAVRAS CHAVE
+            try:
+                palavras_chave = [k if type(k) == str else k['#text'] for k in
+                                  article['front']['article-meta']['kwd-group']['kwd']]
+            except Exception as e:
+                palavras_chave = []
+                print(e.__class__.__name__, e)
+
+            ### DOI / IDs
+            pmc_id = [id['#text'] for id in article['front']['article-meta']['article-id'] if id['@pub-id-type'] == 'pmc'][-1] or ''
+            try:
+                doi = \
+                [id['#text'] for id in article['front']['article-meta']['article-id'] if id['@pub-id-type'] == 'doi'][
+                    -1] or ''
+            except Exception as e:
+                doi = ''
+                print(e.__class__.__name__, e)
+            #     if debug:
+            #         ipdb.set_trace()
+
+            ### Abstract
+            try:
+                abstract = article['front']['article-meta']['abstract']
+                if type(abstract) == dict:
+                    try:
+                        resumo = abstract['p']['#text']
+                    except:
+                        resumo = ''
+                elif type(abstract) == list:
+                    for ab in abstract:
+                        try:
+                            ab['@abstract-type']
+                        except:
+                            continue
+
+                        if ab['@abstract-type'] == 'author-highlights':
+
+                            if type(ab['p']) == dict:
+                                resumo = ab['p']['#text']
+                            elif type(ab['p']) == list:
+                                resumo = ''
+                                for p in ab['p']:
+                                    try:
+                                        p['#text']
+                                    except:
+                                        continue
+                                    resumo = "%s\n%s" % (resumo, p['#text'])
+                else:
+                    resumo = ''
+            except Exception as e:
+                resumo = ''
+                print(e.__class__.__name__, e)
+            #     if debug:
+            #         ipdb.set_trace()
+
+            ### Fim da grosseria
 
             documento = {}
-            documento['resumo'] = getattr(p_art.abstract, 'text', ' - ')
+            documento['resumo'] = resumo
+            print("%s%s" % (self._article_url, pmc_id))
             documento['html_url'] = "%s%s" % (self._article_url, pmc_id)
             documento['autores'] = ",".join(authors)
-            documento['doi'] = self._get_unique_id(p_art)
-            documento['palavras_chaves'] = ",".join(keywords)
-            documento['titulo'] = getattr(p_art, "article-title").text
-
-            try:
-                pub_date = p_art.findAll("pub-date", {"pub-type": "epub"})[0]
-            except:
-                pub_date = p_art.findAll("pub-date", {"pub-type": "ppub"})[0]
-
-            data_pub_string = "%s %s" % (pub_date.year.text, pub_date.month.text)
-
-            try:
-                documento['data'] = datetime.strptime(data_pub_string, "%Y %m").date()
-            except:
-                documento['data'] = datetime.strptime(data_pub_string, "%Y %b").date()
+            documento['doi'] = doi
+            documento['palavras_chaves'] = ",".join(palavras_chave)
+            documento['titulo'] = title
 
             append(documento)
+
+        print('{:15s}{:6.3f}'.format("fetch", time.time() - t_04))
 
         return documentos
 
@@ -500,11 +645,11 @@ class PubMed_Searcher(NCBI_Searcher):
             ano = p_art.PubDate.MedlineDate.text[:8]
 
         try:
-            data_pub_string = "%s %s" % (ano, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
+            data_pub_string = "%s %s" % (ano, NCBI_Searcher.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
             data = datetime.strptime(data_pub_string, "%Y %b").date()
         except:
             try:
-                data_pub_string = "%s %s" % (ano, self.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
+                data_pub_string = "%s %s" % (ano, NCBI_Searcher.deepgetter(p_art, 'PubDate.Month.text', default='Jan'))
                 data = datetime.strptime(data_pub_string, "%Y %m").date()
             except:
                 data = str(p_art.PubDate.text)
