@@ -11,6 +11,7 @@ from functools import reduce
 import re
 import time
 import xmltodict, json
+import ipdb
 
 class IEEE_Xplore_Searcher():
     apikey = '8m22c725rj99bvxq6pftexqk'
@@ -517,29 +518,46 @@ class PMC_Searcher(NCBI_Searcher):
 
         t_04 = time.time()
         debug = False
+
+        ###
+        ### DISCLAIMER: o código abaixo foi sendo feito aos ajustes para cada erro que dava
+        ### não tente ler!
+        ###
+
         for article in articles:
             ### TITULO
-            # try:
-            title = article['front']['article-meta']['title-group']['article-title']
-            # except Exception as e:
-            #     title = ''
-            #     print(e.__class__.__name__, e)
-            #     if debug:
-            #         ipdb.set_trace()
+            try:
+                title = article['front']['article-meta']['title-group']['article-title']
+                if type(title) == dict:
+                    # Pegando, dentre as possibilidades, a maior string (com sorte, esse realmente será o titulo)
+                    title = sorted(title.values(), key=len)[-1]
+            except Exception as e:
+                title = ''
+                if debug:
+                    print(e.__class__.__name__, e, 'title')
+                    ipdb.set_trace()
 
             ### AUTORES
             try:
                 authors = []
-                for contrib in article['front']['article-meta']['contrib-group']['contrib']:
-                    try:
-                        authors.append("%s %s" % (contrib['name']['given-names'], contrib['name']['surname']))
-                    except:
-                        pass
+                try:
+                    for contrib in article['front']['article-meta']['contrib-group']['contrib']:
+                        try:
+                            authors.append("%s %s" % (contrib['name']['given-names'], contrib['name']['surname']))
+                        except:
+                            pass
+                except TypeError:
+                    for contrib in article['front']['article-meta']['contrib-group'][0]['contrib']:
+                        try:
+                            authors.append("%s %s" % (contrib['name']['given-names'], contrib['name']['surname']))
+                        except:
+                            pass
+                    pass
             except Exception as e:
                 authors = []
-                print(e.__class__.__name__, e)
-            #     if debug:
-            #         ipdb.set_trace()
+                if debug:
+                    print(e.__class__.__name__, e, 'authors')
+                    ipdb.set_trace()
 
             ### PALAVRAS CHAVE
             try:
@@ -547,19 +565,30 @@ class PMC_Searcher(NCBI_Searcher):
                                   article['front']['article-meta']['kwd-group']['kwd']]
             except Exception as e:
                 palavras_chave = []
-                print(e.__class__.__name__, e)
+                if debug:
+                    print(e.__class__.__name__, e, 'kwd')
+                    ipdb.set_trace()
 
             ### DOI / IDs
-            pmc_id = [id['#text'] for id in article['front']['article-meta']['article-id'] if id['@pub-id-type'] == 'pmc'][-1] or ''
             try:
                 doi = \
                 [id['#text'] for id in article['front']['article-meta']['article-id'] if id['@pub-id-type'] == 'doi'][
                     -1] or ''
             except Exception as e:
                 doi = ''
-                print(e.__class__.__name__, e)
-            #     if debug:
-            #         ipdb.set_trace()
+                if debug:
+                    print(e.__class__.__name__, e, 'doi')
+                    ipdb.set_trace()
+
+            try:
+                pmc_id = \
+                [id['#text'] for id in article['front']['article-meta']['article-id'] if id['@pub-id-type'] == 'pmc'][
+                    -1] or ''
+            except Exception as e:
+                pmc_id = ''
+                if debug:
+                    print(e.__class__.__name__, e, 'pmc_id')
+                    ipdb.set_trace()
 
             ### Abstract
             try:
@@ -567,6 +596,19 @@ class PMC_Searcher(NCBI_Searcher):
                 if type(abstract) == dict:
                     try:
                         resumo = abstract['p']['#text']
+                    except TypeError:
+                        try:
+                            if type(abstract['p']) == str:
+                                resumo = abstract['p']
+                            elif type(abstract['p']) == list:
+                                resumo = abstract['p'][0]['#text']
+                        except KeyError:
+                            try:
+                                resumo = abstract['sec'][0]['p']
+                            except:
+                                resumo = ''
+                        except:
+                            resumo = ''
                     except:
                         resumo = ''
                 elif type(abstract) == list:
@@ -591,16 +633,22 @@ class PMC_Searcher(NCBI_Searcher):
                 else:
                     resumo = ''
             except Exception as e:
+                # Não tem resumo
                 resumo = ''
-                print(e.__class__.__name__, e)
-            #     if debug:
-            #         ipdb.set_trace()
+                if debug:
+                    print(e.__class__.__name__, e, 'resumo')
+                    ipdb.set_trace()
 
+            ###
             ### Fim da grosseria
+            ###
+
+            if not pmc_id or not title:
+                # O mínimo é o LINK e o título para o documento ser incluso
+                continue
 
             documento = {}
             documento['resumo'] = resumo
-            print("%s%s" % (self._article_url, pmc_id))
             documento['html_url'] = "%s%s" % (self._article_url, pmc_id)
             documento['autores'] = ",".join(authors)
             documento['doi'] = doi
@@ -673,11 +721,14 @@ class PubMed_Searcher(NCBI_Searcher):
         id_list = ','.join([str(x) for x in args])
 
         payload = {"id": id_list, "db": self._db, "retmode": "xml"}
+        payload.update(self.ncbi_register)
         url = "%s?%s" % (self.fetch_url, urlencode(payload))
 
         print("URL META: %s" % url)
 
+        t_03 = time.time()
         soup = bsoup(requests.get(url).content, "xml")
+        print('{:15s}{:6.3f}'.format("parse", time.time() - t_03))
 
         pubmed_articles = soup.findAll('PubmedArticle')
 
