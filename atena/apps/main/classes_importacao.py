@@ -255,7 +255,6 @@ class NCBI_Searcher(metaclass=ABCMeta):
     meta_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
     fetch_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
     ncbi_register = {"tool": "Atena", "email": "ddddiegolima@gmail.com"}
-    max_pagination = 20
     recursive = True
 
     def search(self, queryterms: list = None, search_type: str = None,
@@ -311,46 +310,23 @@ class NCBI_Searcher(metaclass=ABCMeta):
         if self.recursive:
             print("Artigos encontrados: ", quantidade_artigos)
         # Se o usuário não limitou quantidade de resultados, então traz tudo
-        max_records = max_records or quantidade_artigos
+        max_records = max_records or 20
 
         retorno = []
 
-        ###
-        ### BLOCO FANTASMA
-        ###
-        # Se houver necessidade de paginação...
-        #         if quantidade_artigos > self.max_pagination and max_records > self.max_pagination:
-        #             # self.recursive só sera True se a chamada estiver sendo feita pelo usuário.
-        #             # Isso serve para garantir que cada chamada da função self.search
-        #             # neste bloco só acontecerá com um nível de recursividade.
-        #             if self.recursive:
-        #                 self.recursive = False
+        if quantidade_artigos > max_records and self.recursive:
+            # self.recursive só sera True se a chamada estiver sendo feita pelo usuário.
+            # Isso serve para garantir que cada chamada da função self.search
+            # neste bloco não provocará recursividade.
+            self.recursive = False
+            payload.update({'retmax': quantidade_artigos})
+            payload.update({'retstart': max_records})
+            kwargs = {"search_url": "%s?%s" % (self.search_url, urlencode(payload))}
 
-        #                 threads = []
-        #                 payload.update({'retmax':self.max_pagination})
-        #                 for i,x in enumerate(range(20, quantidade_artigos+1, self.max_pagination)):
+            lista = self.search(**kwargs)
+            retorno.extend(lista)
 
-        #                     payload.update({'retstart':x})
-        #                     kwargs = {"search_url": "%s?%s" % (self.search_url, urlencode(payload))}
-
-        #                     thread = ThreadWithReturnValue(target=self.search, kwargs=kwargs)
-        #                     threads.append(thread)
-        #                     thread.start()
-
-        #                     if (i+1)%3==0:
-        #                         print("sleeping")
-        #                         time.sleep(2)
-
-        #                 for thread in threads:
-        #                     lista = thread.join()
-        #                     print("thread fetching ",len(lista))
-        #                     retorno.extend(lista)
-
-        #                 self.recursive = True
-
-        ###
-        ### FIM BLOCO FANTASMA
-        ###
+            self.recursive = True
 
         id_list = response['idlist']
 
