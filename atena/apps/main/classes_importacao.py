@@ -2,7 +2,7 @@
 from abc import ABCMeta, abstractmethod
 import requests
 from elsapy.elsclient import ElsClient
-from .utils import dive, inclusive_range
+from .utils import dive, inclusive_range, get_all_text
 from urllib.parse import urlencode, quote_plus
 from datetime import datetime
 import re
@@ -253,7 +253,7 @@ class NCBI_Searcher(metaclass=ABCMeta):
     fetch_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
     ncbi_register = {"tool": "Atena", "email": "ddddiegolima@gmail.com"}
     recursive = True
-    request_uri_limit = 50
+    request_uri_limit = 100
 
     def search(self, queryterms: list = None, search_type: str = None,
                start_year: int = None, end_year: int = None,
@@ -460,84 +460,103 @@ class PMC_Searcher(NCBI_Searcher):
             doc = {}
 
             ### TITULO
-            titulo = diver('front.article-meta.title-group.article-title')
-            if isinstance(titulo, dict):
-                titulo = titulo['#text']
-            doc['titulo'] = titulo
+            try:
+                titulo = diver('front.article-meta.title-group.article-title')
+                titulo = get_all_text(titulo)
+                doc['titulo'] = " ".join(titulo)
+            except Exception as e:
+                print('erro:', 'titulo')
+                print(repr(e))
+                if debug:
+                    ipdb.set_trace()
 
             ### RESUMO / ABSTRACT
-            resumo = diver('front.article-meta.abstract')
-            if isinstance(resumo, dict):
-                resumo = dive(resumo, ['p', 'sec'])
-                if isinstance(resumo, dict):
-                    resumo = dive(resumo, '#text')
-                elif isinstance(resumo, list):
-                    list_ = []
-                    for r in resumo:
-                        string = dive(r, ['#text', 'p'])
-                        if isinstance(string, dict):
-                            string = dive(string, '#text')
-                        if not string.startswith("error:"):
-                            list_.append(string)
-
-                    resumo = "\n".join(list_)
-            if isinstance(resumo, list):
-                list_ = []
-                for r in resumo:
-                    string = dive(r, 'p')
-                    if not string.startswith("error:"):
-                        list_.append(string)
-
-                resumo = "\n".join(list_)
-
-            doc['resumo'] = resumo
+            try:
+                resumo = diver('front.article-meta.abstract')
+                resumo = get_all_text(resumo, ['sec'])
+                doc['resumo'] = "\n".join(resumo)
+            except Exception as e:
+                print('erro:', 'resumo')
+                print(repr(e))
+                if debug:
+                    ipdb.set_trace()
 
             ### PALAVRAS-CHAVE
-            keywords = diver('front.article-meta.kwd-group')
-            if isinstance(keywords, dict):
-                keywords = ",".join(keywords['kwd'])
-            elif isinstance(keywords, list):
-                keywords = keywords[0]['kwd']
-                if isinstance(keywords[0], dict):
-                    keywords = [dive(k, '#text') for k in keywords]
-                keywords = ",".join(keywords)
-
-            doc['palavras_chave'] = keywords
+            try:
+                keywords = diver('front.article-meta.kwd-group')
+                keywords = get_all_text(keywords, ['kwd'])
+                doc['palavras_chave'] = ",".join(keywords)
+            except Exception as e:
+                print('erro:', 'keywords')
+                print(repr(e))
+                if debug:
+                    ipdb.set_trace()
 
             ### AUTORES
-            authors = diver('front.article-meta.contrib-group')
-            if isinstance(authors, dict):
-                authors = authors['contrib']
+            try:
+                authors = diver('front.article-meta.contrib-group')
+                if isinstance(authors, dict):
+                    authors = authors['contrib']
 
-            elif isinstance(authors, list):
-                authors = authors[0]['contrib']
+                elif isinstance(authors, list):
+                    authors = authors[0]['contrib']
 
-            if isinstance(authors, dict):
-                name = authors.get('name', None)
-                if name:
-                    authors = "%s %s" % (name['given-names'], name['surname'])
-            elif isinstance(authors, list):
-                list_ = []
-                for a in authors:
-                    name = a.get('name', None)
+                if isinstance(authors, dict):
+                    name = authors.get('name', None)
                     if name:
-                        list_.append("%s %s" % (name['given-names'], name['surname']))
-                authors = ",".join(list_)
+                        authors = "%s %s" % (name['given-names'], name['surname'])
+                elif isinstance(authors, list):
+                    list_ = []
+                    for a in authors:
+                        name = a.get('name', None)
+                        if name:
+                            list_.append("%s %s" % (name['given-names'], name['surname']))
+                    authors = ",".join(list_)
 
-            doc['autores'] = authors
+                doc['autores'] = authors
+            except Exception as e:
+                print('erro:', 'authors')
+                print(repr(e))
+                if debug:
+                    ipdb.set_trace()
 
-            ### HTML_URL E DOI
             article_ids = diver('front.article-meta.article-id')
-            pmc_id = [a for a in article_ids if a["@pub-id-type"] == 'pmc'][0]['#text']
-            doi = [a for a in article_ids if a["@pub-id-type"] == 'doi'][0]['#text']
+            ### HTML_URL
+            try:
+                pmc_id = [a for a in article_ids if a["@pub-id-type"] == 'pmc'][0]['#text']
 
-            doc['html_url'] = "%s%s" % (self._article_url, pmc_id)
-            doc['doi'] = doi
+                doc['html_url'] = "%s%s" % (self._article_url, pmc_id)
+            except Exception as e:
+                print('erro:', 'html_url')
+                print(repr(e))
+                if debug:
+                    ipdb.set_trace()
+
+            ### DOI
+            try:
+                doi = [a for a in article_ids if a["@pub-id-type"] == 'doi'][0]['#text']
+
+                doc['doi'] = doi
+            except Exception as e:
+                print('erro:', 'doi')
+                print(repr(e))
+                if debug:
+                    ipdb.set_trace()
 
             ### DATA
-            data = diver('front.article-meta.pub-date')[0]
-            data = "%s %s" % (data['year'], data['month'])
-            doc['data'] = datetime.strptime(data, "%Y %m").date()
+            try:
+
+                data = diver('front.article-meta.pub-date')
+                if isinstance(data, dict):
+                    data = [data]
+                data = data[0]
+                data = "%s %s" % (data['year'], data.get('month', '01'))
+                doc['data'] = datetime.strptime(data, "%Y %m").date()
+            except Exception as e:
+                print('erro:', 'data')
+                print(repr(e))
+                if debug:
+                    ipdb.set_trace()
 
             append(doc)
 
@@ -599,36 +618,24 @@ class PubMed_Searcher(NCBI_Searcher):
 
             ### TITULO
             titulo = diver('MedlineCitation.Article.ArticleTitle')
-            if isinstance(titulo, dict):
-                titulo = titulo["#text"]
-            doc['titulo'] = titulo
+            titulo = get_all_text(titulo)
+            doc['titulo'] = " ".join(titulo)
 
             ### RESUMO / ABSTRACT
-            resumo = diver('MedlineCitation.Article.Abstract.AbstractText')
             try:
-                if isinstance(resumo, list):
-                    list_ = []
-                    for r in resumo:
-                        if isinstance(r, dict):
-                            list_.append(r['#text'])
-                        elif isinstance(r, str):
-                            list_.append(r)
-                    resumo = "\n".join(list_)
-                elif isinstance(resumo, dict):
-                    resumo = resumo['#text']
-                doc['resumo'] = resumo
+                resumo = diver('MedlineCitation.Article.Abstract.AbstractText')
+                resumo = get_all_text(resumo)
+                doc['resumo'] = "\n".join(resumo)
             except:
                 print("resumo")
                 if debug:
                     ipdb.set_trace()
 
             ### PALAVRAS-CHAVE
-            keywords = diver('MedlineCitation.KeywordList.Keyword')
             try:
-                if isinstance(keywords, list):
-                    doc['palavras_chave'] = ",".join([k['#text'] for k in keywords])
-                elif isinstance(keywords, dict):
-                    doc['palavras_chave'] = keywords['#text']
+                keywords = diver('MedlineCitation.KeywordList.Keyword')
+                keywords = get_all_text(keywords)
+                doc['palavras_chave'] = ",".join(keywords)
             except:
                 print("keywords")
                 if debug:

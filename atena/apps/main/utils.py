@@ -3,6 +3,8 @@ from functools import reduce
 
 
 class ThreadWithReturnValue(Thread):
+    """Classe que herda Thread. A única modificação feita é que essa classe agora vai retornar
+    o resultado do seu processamento através da função join(), coisa que a classe original não fazia."""
     def __init__(self, group=None, target=None, name=None,
                  args=(), kwargs=None, daemon=None):
         Thread.__init__(self, group=group, target=target, name=name,
@@ -61,7 +63,7 @@ def dive(item, routes, starter_item=None):
             # Comeca do zero, na proxima rota, se tiver
             return dive(starter_item, routes)
         # Nao tem proxima rota, entao deu erro mesmo
-        return "error:%s|%s<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" % (next_checkpoint, repr(e))
+        return "" % (next_checkpoint, repr(e))
 
     if len(checkpoints) == 0:
         return content
@@ -103,3 +105,24 @@ def inclusive_range(start, end, step=1):
             start = end
 
         yield tupla
+
+
+def get_all_text(item, rota_extra=[]):
+    """Recursivamente explora uma lista ou dicionario, em busca de campos de texto
+    segundo o passado em rota_extra e seguindo o padrão de procurar 'p' e '#text'
+    retornando todas as strings encontradas"""
+
+    retorno = []
+
+    if isinstance(item, str):
+        retorno.append(item)
+    if isinstance(item, list):
+        for i in item:
+            retorno.extend(get_all_text(i, rota_extra))
+    if isinstance(item, dict):
+        rota = ['p', '#text']
+        rota.extend(rota_extra)
+        item = dive(item, rota)
+        retorno.extend(get_all_text(item, rota_extra))
+
+    return retorno
