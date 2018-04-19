@@ -109,7 +109,7 @@ class ClassificarDocumentosView(ListaDocumentosRevisaoView):
     def get(self, request, *args, **kwargs):
         docs = Documento.objects.filter(revisoes=kwargs.get('pk'), citado_papers_scholar=None)
         for doc in docs:
-            item = next(scholarly.search_pubs_query(doc.doi))
+            item = next(scholarly.search_pubs_query(doc.doi), None)
             if item:
                 with transaction.atomic():
                     try:
