@@ -5,7 +5,7 @@ from functools import reduce
 
 from contas.models import Usuario
 from .models import Documento, Base
-
+import dateparser
 
 class DocumentoSerializerIEEE(serializers.ModelSerializer):
     class Meta:
@@ -70,10 +70,14 @@ class DocumentoElsevierSerializer(serializers.ModelSerializer):
         except:
             authors = data.get('dc:creator')
 
-        if self.base == Base.SCIENCE_DIRECT:
-            date = datetime.strptime(data['prism:coverDate'][0]['$'], '%Y-%m-%d')
-        elif self.base == Base.SCOPUS:
-            date = datetime.strptime(data['prism:coverDate'], '%Y-%m-%d')
+        try:
+            if self.base == Base.SCIENCE_DIRECT:
+                date = datetime.strptime(data['prism:coverDate'][0]['$'], '%Y-%m-%d')
+            elif self.base == Base.SCOPUS:
+                date = datetime.strptime(data['prism:coverDate'], '%Y-%m-%d')
+        except:
+            if 'prism:coverDisplayDate' in data:
+                date = dateparser.parse(data['prism:coverDisplayDate'])
 
 
         if not Documento.objects.filter(titulo=data.get('dc:title'), doi=data.get('prism:doi')):
@@ -108,7 +112,10 @@ class DocumentoSpringerSerializer(serializers.ModelSerializer):
         if not 'doi' in data.keys():
             data['doi'] = None
 
-        url = [x['value'] for x in data.get('url') if x['format'] == 'html'][0]
+        try:
+            url = [x['value'] for x in data.get('url') if x['format'] == 'html'][0]
+        except:
+            url = [x['value'] for x in data.get('url')][0]
 
         if not Documento.objects.filter(titulo=data.get('title'), doi=data.get('doi')):
             l = lambda x, y: f'{x}; {y["creator"]}'

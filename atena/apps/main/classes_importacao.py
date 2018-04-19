@@ -25,7 +25,7 @@ class IEEE_Xplore_Searcher():
 
 
     def search(self, queryterms: list=None, search_type: str="meta_data",
-                start_year: int = None, end_year: int = None,content_type: str = None,
+                start_year: int = None, end_year: int = None,content_type: str = 'Journals',
                 start_record: int = 1, sort_field: str = None, sort_order: int = None,
                 max_records: int = 200, article_title: str = None, author: str = None
         ):
@@ -713,7 +713,7 @@ class Springer_Searcher():
         if address:
             self.address = address
 
-    def search(self, queryterms: list = None, max_records: int = 2500, start_record: int = 1, year: int = None, end_year: int = None):
+    def search(self, queryterms: list = None, max_records: int = 2500, start_record: int = 1, type: str = 'Journal', year: int = None, end_year: int = None):
         """
         @param queryterms: list of lists. Terms within the same list are
             separated by an OR. Lists are separated by an AND
@@ -723,6 +723,7 @@ class Springer_Searcher():
                      If left blank will serach all year
         @param end_year: limit to articles/chapters published from a @year to actual @end_year.
                      If left blank will serach all year
+        @param type: limit to either Book or Journal content {Book, Journal}
         """
 
         if not queryterms:
@@ -732,8 +733,11 @@ class Springer_Searcher():
 
         url = self.address + "q=" + formated_query
 
+        if type:
+            url += ' AND type:'+type
+
         if year:
-            url += ' year:' + str(year)
+            url += ' AND year:' + str(year)
             if max_records:
                 url += '&p=' + str(max_records)
             if start_record:
