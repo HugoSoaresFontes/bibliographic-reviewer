@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^revisao/(?P<pk>\d+)/$', EdicaoRevisaoView.as_view(), name='EdicaoRevisao'),
     url(r'^revisao/(?P<pk>\d+)/artigos$', ListaDocumentosRevisaoView.as_view(), name='ListaDocumentosRevisao'),
     url(r'^revisao/(?P<pk>\d+)/documentos/(?P<pk_documento>\d+)/$', VisualizaDocumentoView.as_view(), name='VisualizarDocumento'),
+    url(r'^revisao/(?P<revisao_pk>\d+)/documento/add/$', CadastroDocumentoRevisaoView.as_view(), name='CadastroDocumentoRevisao'),
     url(r'^revisao/(?P<pk>\d+)/documentos/importar/$', ImportarDocumentosView.as_view(), name='ImportarDocumentos'),
     url(r'^revisao/(?P<pk>\d+)/documentos/remover/$', RemoverDocumentoRevisaoView.as_view(), name='RemoverDocumentos'),
     url(r'^revisao/(?P<pk>\d+)/documentos/classificar/$', ClassificarDocumentosView.as_view(), name='ClassificarDocumentos'),
@@ -21,5 +22,6 @@ urlpatterns = [
         EdicaoFichamentoView.as_view(), name='EdicaoFichamento'),
 
     url(r'^revisao/(?P<revisao_pk>\d+)/documentos/tags/add/$', CadastroTagView.as_view(), name='CadastroTag'),
+    url(r'^revisao/(?P<revisao_pk>\d+)/documentos/tags/associar/$', AssociarTagView.as_view(), name='AssociarTag'),
 
 ]
