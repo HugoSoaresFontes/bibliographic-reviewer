@@ -27,7 +27,7 @@ class SucessoView(BaseTemplateView):
     template = 'sucesso.html'
     titulo_pagina = "Operação realizada com sucesso"
 
-
+    
 class VisualizaDocumentoView(LoginRequiredMixin, BaseTemplateView):
     template = 'main/documento.html'
     titulo_pagina = "Documento"
