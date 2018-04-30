@@ -6,10 +6,19 @@
     <div class="col-md-12">
       <div class="box">
         <div class="box-header with-border">
-          <h3 class="box-title">Lista</h3>
-          {% block extra_table_head %}
-          {% endblock extra_table_head %}
-         </div>
+            <div class="row">
+                <div class="col-md-8">
+                    <form id="search-form" method="GET" style="width: 50%;">
+                        <input type="text"  name="entrada" placeholder="Pesquisar"
+                        value="{{ entrada_atual_filtro }}" style="border: 1px solid; border-color: #d2d6de; padding: 6px;">
+                        <button id="search-submit" type="submit" style="background-color: transparent; border: none;">
+                            <i class="fa fa-search" style="color: gray;"></i>
+                        </button>
+                    </form>
+                </div>
+              {% block extra_table_head %}
+              {% endblock extra_table_head %}
+            </div>
         <div class="box-body">
           {% block tabela %}
           {% endblock tabela %}
