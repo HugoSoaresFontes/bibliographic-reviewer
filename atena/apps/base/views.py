@@ -60,7 +60,8 @@ class BaseUpdateView(BaseFormView, UpdateView):
 class BaseListView(LoginRequiredMixin, TemplateView):
     template_name = "base/lista.html"
     subtitulo_pagina = "Lista"
-    form = []
+    filtro = None
+    entrada_atual_filtro = ""
     queryset = []
     paginate_by = 15
     titulo_pagina = ""
@@ -68,14 +69,17 @@ class BaseListView(LoginRequiredMixin, TemplateView):
     def get_queryset(self):
         return self.queryset
 
-    # def get(self, *args, **kwargs):
-    # 	form = self.form(self.request.GET or None, queryset=self.get_queryset())
-    # 	if form.is_valid():
-    # 		self.queryset = form.pesquisar()
-    # 	else:
-    # 		self.queryset = self.get_queryset()
-    #
-    # 	return super(BaseListView, self).get(*args, **kwargs)
+    def get(self, *args, **kwargs):
+        if self.filtro:
+            filtro = self.filtro(self.request.GET or None, queryset=self.get_queryset())
+            if filtro.is_valid():
+                self.queryset = filtro.pesquisar()
+                self.entrada_atual_filtro = filtro['entrada'].value()
+            else:
+                self.queryset = self.get_queryset()
+
+        return super(BaseListView, self).get(*args, **kwargs)
+
 
     def get_context_data(self, **kwargs):
         paginator = Paginator(self.get_queryset(), self.paginate_by, tail=4, body=3)
@@ -95,6 +99,7 @@ class BaseListView(LoginRequiredMixin, TemplateView):
         return {
             'GET_params': GET_params,
             'lista': lista,
-            # 'filtro': self.form,
+            'filtro': self.filtro,
+            'entrada_atual_filtro': self.entrada_atual_filtro,
             'titulo_pagina': self.titulo_pagina,
         }

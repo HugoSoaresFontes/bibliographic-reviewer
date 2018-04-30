@@ -11,6 +11,7 @@ from reversion.views import RevisionMixin
 
 from .models import Revisao, Documento, Fichamento, Tag
 from .importar_arquivos import importar_arquivos
+from .filtros import (ListaDocumentosRevisaoFiltro)
 from .forms import RevisaoForm, FichamentoForm, SelecionarBaseForm, TagForm, DocumentoForm
 import scholarly
 import json
@@ -88,13 +89,15 @@ class ListaDocumentosRevisaoView(GroupRequiredMixin, BaseListView):
     template_name = 'main/listas/artigos_revisao.html'
     titulo_pagina = "Documentos"
     model = Documento
+    filtro = ListaDocumentosRevisaoFiltro
+    queryset = Documento.objects.all().order_by('citado_papers_scholar_data')
 
     def get_queryset(self):
-        queryset = Documento.objects.filter(revisoes=self.kwargs.get('pk'))
+        self.queryset = self.queryset.filter(revisoes=self.kwargs.get('pk')).order_by('-citado_papers_scholar')
         if self.request.GET.get('tag'):
             tags = self.request.GET.get('tag').split(',')
-            queryset = queryset.filter(fichamentos__tags__id__in=tags)
-        return queryset
+            self.queryset = self.queryset.filter(fichamentos__tags__id__in=tags)
+        return self.queryset
 
     def get_context_data(self, **kwargs):
         context = super(ListaDocumentosRevisaoView, self).get_context_data(**kwargs)
