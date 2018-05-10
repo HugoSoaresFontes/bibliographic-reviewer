@@ -139,7 +139,7 @@ class Fichamento(BaseModel):
     citacoes = MartorField("Citações", blank=True)
     anotacoes = MartorField("Anotações gerais", blank=True)
 
-    tags = models.ManyToManyField(Tag, related_name='fichamentos')
+    tags = models.ManyToManyField(Tag)
 
     class Meta:
         db_table = 'main_fichamentos'
