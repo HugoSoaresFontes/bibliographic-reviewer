@@ -1,5 +1,6 @@
 from threading import Thread
 from functools import reduce
+import os, json
 
 
 class ThreadWithReturnValue(Thread):
@@ -124,5 +125,40 @@ def get_all_text(item, rota_extra=[]):
         rota.extend(rota_extra)
         item = dive(item, rota)
         retorno.extend(get_all_text(item, rota_extra))
+
+    return retorno
+
+
+def curl_json(url):
+    """
+    Essa função tem a intenção de substituir o get() e json() da biblioteca requests.
+    Isso porque um simples GET a um serviço específico da NCBI estava demorando dois minutos,
+    sendo que o mesmo GET via curl no terminal demorava dois segundos (valores reais).
+
+    Essa função realiza um CURL no terminal, passando flags de resposta em JSON.
+    """
+    comando = """
+        curl -s -i -H "Accept: application/json" -H "Content-Type: application/json" -X GET "%s"
+    """ % (url)
+
+    retorno = os.popen(comando).read().split('\n')
+    JSON = retorno[retorno.index(''):]
+    JSON = "".join(JSON)
+
+    return json.loads(JSON)
+
+def curl(url):
+    """
+    Essa função tem a intenção de substituir o get() da biblioteca requests.
+    Isso porque um simples GET a um serviço específico da NCBI estava demorando dois minutos,
+    sendo que o mesmo GET via curl no terminal demorava dois segundos (valores reais).
+
+    Essa função realiza um CURL no terminal.
+    """
+    comando = """
+        curl -s -X GET "%s"
+    """ % (url)
+
+    retorno = os.popen(comando).read()
 
     return retorno
