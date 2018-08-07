@@ -156,6 +156,9 @@ class NCBISerializer(serializers.ModelSerializer):
     def save(self, data):
         payload = {k:v for k,v in data.items() if k in self.Meta.fields}
 
+        if 'doi' not in data:
+            return
+
         if not Documento.objects.filter(titulo=data.get('titulo'), doi=data.get('doi')):
             doc = Documento.objects.create(**payload)
             doc.save()

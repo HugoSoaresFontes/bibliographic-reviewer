@@ -2,7 +2,7 @@
 from abc import ABCMeta, abstractmethod
 import requests
 from elsapy.elsclient import ElsClient
-from .utils import dive, inclusive_range, get_all_text
+from .utils import dive, inclusive_range, get_all_text, curl_json, curl
 from urllib.parse import urlencode, quote_plus
 from datetime import datetime
 import re
@@ -293,10 +293,7 @@ class NCBI_Searcher(metaclass=ABCMeta):
 
         print(term)
 
-        if max_records and max_records > self.request_uri_limit:
-            retmax = self.request_uri_limit
-        else:
-            retmax = max_records
+        retmax = 120
 
         fixed_payload = {"retmode": "json", "datetype": "pdat",
                          "db": self._db, "sort": self._sort_order}
@@ -309,8 +306,10 @@ class NCBI_Searcher(metaclass=ABCMeta):
 
         print("URL SEARCH: %s" % url)
         t_00 = time.time()
-        response = requests.get(url).json()['esearchresult']
+        response = curl_json(url)
         print('{:15s}{:6.3f}'.format("response", time.time() - t_00))
+
+        response = response['esearchresult']
         quantidade_artigos = int(response['count'])
         if self.recursive:
             print("Artigos encontrados: ", quantidade_artigos)
@@ -440,12 +439,12 @@ class PMC_Searcher(NCBI_Searcher):
         print("URL META: %s" % url)
 
         t_05 = time.time()
-        r = requests.get(url)
+        r = curl(url)
         print('{:15s}{:6.3f}'.format("response_M", time.time() - t_05))
 
         t_02 = time.time()
         # Pegar o XML, e transformar num dicionário
-        d = json.loads(json.dumps(xmltodict.parse(r.content)))
+        d = json.loads(json.dumps(xmltodict.parse(r)))
         artigos = d['pmc-articleset']['article']
         print('{:15s}{:6.3f}'.format("parse", time.time() - t_02))
 
@@ -594,12 +593,12 @@ class PubMed_Searcher(NCBI_Searcher):
         print("URL META: %s" % url)
 
         t_05 = time.time()
-        r = requests.get(url)
+        r = curl(url)
         print('{:15s}{:6.3f}'.format("response_M", time.time() - t_05))
 
         t_02 = time.time()
         # Pegar o XML, e transformar num dicionário
-        d = json.loads(json.dumps(xmltodict.parse(r.content)))
+        d = json.loads(json.dumps(xmltodict.parse(r)))
         artigos = d['PubmedArticleSet']['PubmedArticle']
         if isinstance(artigos, dict):
             # No caso de vir somente um artigo no resultado
