@@ -293,7 +293,7 @@ class NCBI_Searcher(metaclass=ABCMeta):
 
         print(term)
 
-        retmax = 120
+        retmax = max_records or 1200
 
         fixed_payload = {"retmode": "json", "datetype": "pdat",
                          "db": self._db, "sort": self._sort_order}
