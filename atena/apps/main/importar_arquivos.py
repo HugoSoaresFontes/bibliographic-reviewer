@@ -69,7 +69,8 @@ def importar_arquivos(revisao, queryterms, base, cadastrante, **kwargs):
         base_artigos = Base.objects.get(id=Base.PUBMED)
 
         documentos = PubMed_Searcher().search(queryterms=queryterms, journal=kwargs.get('revistas'),
-                                              start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'))
+                                              start_year=kwargs.get('ano_inicio'), end_year=kwargs.get('ano_fim'),
+                                              extra=kwargs.get('extra'))
         for doc in documentos:
             doc.update({
                 'revisao': revisao,

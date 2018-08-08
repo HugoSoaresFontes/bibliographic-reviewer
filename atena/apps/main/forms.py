@@ -107,6 +107,7 @@ class SelecionarBaseForm(forms.Form):
     revistas = forms.CharField(required=False)
     ano_inicio = forms.IntegerField(required=False)
     ano_fim = forms.IntegerField(required=False)
+    extra = forms.CharField(required=False)
     bases_de_pesquisa = forms.MultipleChoiceField(
         choices=(
             ('IEEE Xplore', 'IEEE Xplore'),

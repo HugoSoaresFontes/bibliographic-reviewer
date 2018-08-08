@@ -160,6 +160,10 @@ class SelecionarBaseHelper(FormHelper):
                 css_class='form-group col-md-6'
             ),
             Div(
+                Field('extra', css_class="form-control"),
+                css_class='form-group col-md-12'
+            ),
+            Div(
                 Field('bases_de_pesquisa', css_class=""),
                 css_class='form-group col-md-12'
             )

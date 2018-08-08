@@ -258,7 +258,8 @@ class NCBI_Searcher(metaclass=ABCMeta):
     def search(self, queryterms: list = None, search_type: str = None,
                start_year: int = None, end_year: int = None,
                max_records: int = None, start_record: int = None,
-               author: str = None, journal: str = None, search_url: str = None):
+               author: str = None, journal: str = None, search_url: str = None,
+               extra: dict = None):
         """
         Realiza uma pesquisa NCBI.
         @param queryterms: list of lists. Terms within the same list are
@@ -277,10 +278,11 @@ class NCBI_Searcher(metaclass=ABCMeta):
         @param journal: An author's name. Accepts a list of journals too.
         @param search_url: Optionally you can directly specify the URL to
             query from. Setting this parameter will ignore the other parameters.
+        @param extra: um dicionário opcional que pode passar algum parâmetro extra.
         @return: a dictionaries list whose keys are compatible with Documento model.
         """
 
-        term = self._search_term(queryterms, search_type=search_type)
+        term = self._search_term(queryterms, search_type=search_type, extra=extra)
         if author:
             author = [author] if type(author) == str else author
             author = ['%s[Author]' % a for a in author]
@@ -341,15 +343,20 @@ class NCBI_Searcher(metaclass=ABCMeta):
 
         return retorno
 
-    def _search_term(self, queryterms: list, search_type: str = None):
+    def _search_term(self, queryterms: list, search_type: str = None, extra: dict = None):
         """Monta o termo de pesquisa completo para mandar para a API."""
+
+        if extra is None:
+            extra = {}
 
         if type(queryterms) != list:
             return
 
         if search_type in ['querytext', None]:
-            # Retorna simplesmente a busca concatenando com os OR's e AND's
-            return "(%s)" % " AND ".join(["(%s)" % " OR ".join(orses) for orses in queryterms])
+            # Retorna concacentando com os OR'S e AND's, mas embutindo também os campos de pesquisa em cada termo
+            queryterms = [[self._embutir_fields(orses) for orses in andes] for andes in queryterms]
+            string = "(%s)" % " AND ".join(["(%s)" % " OR ".join(orses) for orses in queryterms])
+            return "%s %s" % (string, extra.get('extra'))
         elif search_type != 'meta_data':
             raise Exception('Tipo de pesquisa não faz sentido: %s\nTipos suportados:' % search_type)
 
