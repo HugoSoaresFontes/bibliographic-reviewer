@@ -576,7 +576,7 @@ class PubMed_Searcher(NCBI_Searcher):
 
     @property
     def _fields(self):
-        return ['Text Words']
+        return ['Title/Abstract']
 
     @property
     def _db(self):
