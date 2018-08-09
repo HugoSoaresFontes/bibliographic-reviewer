@@ -9,7 +9,7 @@ from .models import *
 
 
 class LoginForm(forms.Form):
-    cpf = BRCPFFieldUnique(label='cpf', required=True)
+    cpf = forms.CharField(label='cpf', required=True)
     senha = forms.CharField(label='Senha', required=False)
     lembrar_me = forms.BooleanField(label="Manter conectado", required=False)
 
