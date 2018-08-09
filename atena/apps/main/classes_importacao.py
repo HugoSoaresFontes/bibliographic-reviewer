@@ -8,7 +8,6 @@ from datetime import datetime
 import re
 import time
 import xmltodict, json
-import ipdb
 
 class IEEE_Xplore_Searcher():
     apikey = '8m22c725rj99bvxq6pftexqk'
