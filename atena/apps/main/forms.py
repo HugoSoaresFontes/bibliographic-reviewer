@@ -34,7 +34,7 @@ class RevisaoForm(BaseForm):
 class DocumentoForm(BaseForm):
     class Meta:
         model = Documento
-        exclude = ['revisao']
+        exclude = ['revisao','arquivo']
 
     def __init__(self, *args, **kwargs):
         self.revisao = kwargs.pop('revisao')

@@ -63,7 +63,7 @@ class BaseListView(LoginRequiredMixin, TemplateView):
     filtro = None
     entrada_atual_filtro = ""
     queryset = []
-    paginate_by = 15
+    paginate_by = 64
     titulo_pagina = ""
 
     def get_queryset(self):
