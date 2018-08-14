@@ -178,7 +178,7 @@ class ElsevierSearcher:
             for index_term, term in enumerate(group):
                 if index_term > 0:
                     formated_query += ' OR '
-                formated_query += f'"{term}"'
+                formated_query += f'{term}'
 
                 if (index_term + 1) == len(group):
                     formated_query += ')'
